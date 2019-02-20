@@ -1,0 +1,10 @@
+{
+  "name": "drupal/elastic_apm",
+  "type": "drupal-module",
+  "description": "Provides integration with the PHP agent for Elastic's APM product.",
+  "homepage": "https://www.drupal.org/project/elastic_apm",
+  "license": "GPL-3.0+",
+  "require": {
+    "philkra/elastic-apm-php-agent": "^6.5.2"
+  }
+}
