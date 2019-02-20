@@ -1,0 +1,44 @@
+elastic_apm.configuration:
+  type: config_object
+  label: 'Elastic APM Configuration'
+  mapping:
+    appName:
+      type: string
+      label: 'App name'
+    appVersion:
+      type: string
+      label: 'App version'
+    serverUrl:
+      type: string
+      label: 'Server URL'
+    secretToken:
+      type: string
+      label: 'Secret token'
+    hostname:
+      type: string
+      label: 'Host name'
+    timeout:
+      type: int
+      label: 'Guzzle Client timeout'
+    apmVersion:
+      type: string
+      label: 'APM version'
+    env:
+      type: text
+      label: '$_SERVER variables'
+    cookies:
+      type: text
+      label: 'Cookies'
+    httpClient:
+      verify:
+        type: boolean
+        label: 'Verify'
+      proxy:
+        type: string
+        label: 'Proxy'
+    capture_exceptions:
+      type: boolean
+      label: 'Capture errors and exceptions'
+    active:
+      type: boolean
+      label: 'Enabled'

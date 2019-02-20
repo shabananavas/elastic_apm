@@ -1,0 +1,5 @@
+elastic_apm.configuration:
+  title: 'Elastic APM'
+  route_name: 'elastic_apm.configuration'
+  parent: 'system.performance_settings'
+  description: 'Elastic APM application configuration.'
