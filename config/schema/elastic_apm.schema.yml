@@ -3,38 +3,42 @@ elastic_apm.configuration:
   label: 'Elastic APM Configuration'
   mapping:
     appName:
-      type: string
+      type: label
       label: 'App name'
     appVersion:
-      type: string
+      type: label
       label: 'App version'
     serverUrl:
-      type: string
+      type: label
       label: 'Server URL'
     secretToken:
-      type: string
+      type: label
       label: 'Secret token'
     hostname:
-      type: string
+      type: label
       label: 'Host name'
     timeout:
       type: int
       label: 'Guzzle Client timeout'
     apmVersion:
-      type: string
+      type: label
       label: 'APM version'
     env:
-      type: text
+      type: sequence
       label: '$_SERVER variables'
+      sequence:
+        type: string
     cookies:
-      type: text
+      type: sequence
       label: 'Cookies'
+      sequence:
+        type: string
     httpClient:
       verify:
         type: boolean
         label: 'Verify'
       proxy:
-        type: string
+        type: label
         label: 'Proxy'
     capture_exceptions:
       type: boolean
