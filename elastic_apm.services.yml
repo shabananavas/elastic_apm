@@ -1,0 +1,10 @@
+services:
+  elastic_apm.request_event_subscriber:
+    class: Drupal\elastic_apm\EventSubscriber\ElasticApmRequestSubscriber
+    arguments:
+      - '@config.factory'
+      - '@current_user'
+      - '@current_route_match'
+      - '@request_stack'
+    tags:
+      - {name: event_subscriber}
