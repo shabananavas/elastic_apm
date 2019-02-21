@@ -8,3 +8,11 @@ services:
       - '@request_stack'
     tags:
       - {name: event_subscriber}
+
+  elastic_apm.exception_event_subscriber:
+    class: Drupal\elastic_apm\EventSubscriber\ElasticApmExceptionSubscriber
+    arguments:
+      - '@config.factory'
+      - '@current_user'
+    tags:
+      - {name: event_subscriber}
