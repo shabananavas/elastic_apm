@@ -2,14 +2,17 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
+use function debug_backtrace;
+
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 
 use PhilKra\Agent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -49,11 +52,11 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   protected $routeMatch;
 
   /**
-   * The request stack.
+   * The current database connection.
    *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
+   * @var \Drupal\Core\Database\Connection
    */
-  protected $requestStack;
+  protected $database;
 
   /**
    * A flag whether the master request was processed.
@@ -71,19 +74,19 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The current account.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The active database connection.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     AccountProxyInterface $account,
     RouteMatchInterface $route_match,
-    RequestStack $request_stack
+    Connection $database
   ) {
     $this->config = $config_factory->get('elastic_apm.configuration');
     $this->account = $account;
     $this->routeMatch = $route_match;
-    $this->requestStack = $request_stack;
+    $this->database = $database;
 
     // Initialize our PHP Agent.
     $this->phpAgent = new Agent(
@@ -101,14 +104,16 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    // Run after RouterListener, which has priority 32.
-    return [KernelEvents::REQUEST => ['onRequest', 30]];
+    return [
+      KernelEvents::REQUEST => ['onRequest', 30],
+      KernelEvents::TERMINATE => ['onTerminate', 300],
+    ];
 
     return $events;
   }
 
   /**
-   * Send statistics to the PHP Agent whenever the request event is triggered.
+   * Start a transaction for the PHP Agent whenever this event is triggered.
    *
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   The request event object.
@@ -128,9 +133,12 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
 
     // Create a span to capture the database time.
     $spans = [];
+
     // TODO: Figure out what kind of db info goes here.
     $spans[] = [
-
+      'name' => 'Database Query',
+      'type' => 'db.mysql.query',
+      'stacktrace' => debug_backtrace(),
     ];
 
     // Add the span to the transaction.
@@ -141,6 +149,22 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
 
     // Set processedMasterRequest to TRUE.
     $this->processedMasterRequest = TRUE;
+  }
+
+  /**
+   * End the transaction and send to PHP Agent whenever this event is triggered.
+   *
+   * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
+   *   The terminated event object.
+   *
+   * @throws \PhilKra\Exception\Transaction\UnknownTransactionException
+   */
+  public function onTerminate(PostResponseEvent $event) {
+    // End the transaction.
+    $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
+
+    // Send our transaction to Elastic.
+    $this->phpAgent->send();
   }
 
 }
