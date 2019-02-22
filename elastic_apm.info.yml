@@ -1,0 +1,5 @@
+name: Elastic APM
+type: module
+description: Provides integration with the PHP agent for Elastic's APM product.
+package: Performance
+core: 8.x
