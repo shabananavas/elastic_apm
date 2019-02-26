@@ -87,6 +87,7 @@ class ConfigurationForm extends ConfigFormBase {
     $form['application_configuration']['advanced']['apm_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('APM server intake API version'),
+      '#description' => $this->t('<strong>Currently only the v1 intake API of the APM server is supported.</strong> Leave blank to use the v1 protocol.'),
       '#default_value' => $config->get('apmVersion'),
     ];
 
