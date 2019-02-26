@@ -4,10 +4,14 @@ namespace Drupal\elastic_apm\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Utility\Error;
 
 use PhilKra\Agent;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
@@ -20,6 +24,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
  * @package Drupal\elastic_apm\EventSubscriber
  */
 class ElasticApmRequestSubscriber implements EventSubscriberInterface {
+
+  use StringTranslationTrait;
 
   /**
    * The elastic_apm configuration.
@@ -36,18 +42,32 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   protected $account;
 
   /**
-   * The PHP agent for the Elastic APM.
-   *
-   * @var \PhilKra\Agent
-   */
-  protected $phpAgent;
-
-  /**
    * The current path.
    *
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
   protected $routeMatch;
+
+  /**
+   * Logger service.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * The PHP agent for the Elastic APM.
+   *
+   * @var \PhilKra\Agent
+   */
+  protected $phpAgent;
 
   /**
    * A flag whether the master request was processed.
@@ -65,19 +85,34 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The current account.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     AccountProxyInterface $account,
-    RouteMatchInterface $route_match
+    RouteMatchInterface $route_match,
+    LoggerInterface $logger,
+    MessengerInterface $messenger
   ) {
     $this->config = $config_factory->get('elastic_apm.configuration');
     $this->account = $account;
     $this->routeMatch = $route_match;
+    $this->logger = $logger;
+    $this->messenger = $messenger;
 
     // Initialize our PHP Agent.
+    // Fetch the configs.
+    $elastic_config = $this->config->get();
+    // Set the apmVersion to v1 if it's empty as the PHP Agent doesn't.
+    if (empty($elastic_config['apmVersion'])) {
+      $elastic_config['apmVersion'] = 'v1';
+    }
+
     $this->phpAgent = new Agent(
-      $this->config->get(),
+      $elastic_config,
       [
         'user' => [
           'id' => $this->account->id(),
@@ -116,15 +151,25 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     }
 
     // Start a new transaction.
-    $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
+    try {
+      $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
 
-    // Capture database time.
-    $transaction->setSpans($this->constructDatabaseSpans());
+      // Capture database time.
+      $transaction->setSpans($this->constructDatabaseSpans());
 
-    // Send our transaction to Elastic.
-    $this->phpAgent->send();
+      // Send our transaction to Elastic.
+      $this->phpAgent->send();
+    }
+    catch (\Exception $e) {
+      // Notify the user of the error.
+      $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
 
-    // Set processedMasterRequest to TRUE.
+      // Log the error to watchdog.
+      $error = Error::decodeException($e);
+      $this->logger->log($error['severity_level'], '%type: @message in %function (line %line of %file).', $error);
+    }
+
+    // Mark the request as processed.
     $this->processedMasterRequest = TRUE;
   }
 
@@ -138,10 +183,20 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    */
   public function onTerminate(PostResponseEvent $event) {
     // End the transaction.
-    $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
+    try {
+      $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
 
-    // Send our transaction to Elastic.
-    $this->phpAgent->send();
+      // Send our transaction to Elastic.
+      $this->phpAgent->send();
+    }
+    catch (\Exception $e) {
+      // Notify the user of the error.
+      $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
+
+      // Log the error to watchdog.
+      $error = Error::decodeException($e);
+      $this->logger->log($error['severity_level'], '%type: @message in %function (line %line of %file).', $error);
+    }
   }
 
   /**
@@ -163,9 +218,13 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     // Now, create a span for each query that was run.
     foreach ($connections as $key => $queries) {
       foreach ($queries as $query) {
-        // Change duration time to milliseconds.
-        $query['time'] = $query['time'] * 1000;
+        // Add necessary schema info for the APM server.
+        $query['name'] = $query['caller']['function'];
+        $query['type'] = 'db.mysql.query';
         $query['database'] = $key;
+        // Change duration time to milliseconds.
+        $query['duration'] = $query['time'] * 1000;
+        $query['start'] = 0;
 
         $spans[] = $query;
       }

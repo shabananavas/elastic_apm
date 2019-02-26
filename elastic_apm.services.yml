@@ -15,5 +15,7 @@ services:
       - '@config.factory'
       - '@current_user'
       - '@current_route_match'
+      - '@logger.channel.elastic_apm'
+      - '@messenger'
     tags:
       - {name: event_subscriber}
