@@ -3,7 +3,6 @@
 namespace Drupal\elastic_apm\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -51,13 +50,6 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   protected $routeMatch;
 
   /**
-   * The current database connection.
-   *
-   * @var \Drupal\Core\Database\Connection
-   */
-  protected $database;
-
-  /**
    * A flag whether the master request was processed.
    *
    * @var bool
@@ -73,19 +65,15 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The current account.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route.
-   * @param \Drupal\Core\Database\Connection $database
-   *   The active database connection.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     AccountProxyInterface $account,
-    RouteMatchInterface $route_match,
-    Connection $database
+    RouteMatchInterface $route_match
   ) {
     $this->config = $config_factory->get('elastic_apm.configuration');
     $this->account = $account;
     $this->routeMatch = $route_match;
-    $this->database = $database;
 
     // Initialize our PHP Agent.
     $this->phpAgent = new Agent(

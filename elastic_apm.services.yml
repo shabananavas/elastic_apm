@@ -15,6 +15,5 @@ services:
       - '@config.factory'
       - '@current_user'
       - '@current_route_match'
-      - '@database'
     tags:
       - {name: event_subscriber}
