@@ -1,4 +1,14 @@
 services:
+  logger.channel.elastic_apm:
+    class: Drupal\Core\Logger\LoggerChannel
+    factory: logger.factory:get
+    arguments: ['elastic_apm']
+
+  http_middleware.elastic_apm:
+    class: Drupal\elastic_apm\StackMiddleware\ElasticApmMiddleware
+    tags:
+      - { name: http_middleware, priority: 350 }
+
   elastic_apm.request_event_subscriber:
     class: Drupal\elastic_apm\EventSubscriber\ElasticApmRequestSubscriber
     arguments:

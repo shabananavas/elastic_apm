@@ -2,10 +2,9 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
-use function debug_backtrace;
-
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Database;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 
@@ -131,18 +130,8 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     // Start a new transaction.
     $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
 
-    // Create a span to capture the database time.
-    $spans = [];
-
-    // TODO: Figure out what kind of db info goes here.
-    $spans[] = [
-      'name' => 'Database Query',
-      'type' => 'db.mysql.query',
-      'stacktrace' => debug_backtrace(),
-    ];
-
-    // Add the span to the transaction.
-    $transaction->setSpans($spans);
+    // Capture database time.
+    $transaction->setSpans($this->constructDatabaseSpans());
 
     // Send our transaction to Elastic.
     $this->phpAgent->send();
@@ -165,6 +154,36 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
 
     // Send our transaction to Elastic.
     $this->phpAgent->send();
+  }
+
+  /**
+   * Create spans around the db queries that were run in this request.
+   *
+   * @return array
+   *   An array of spans that will be added to the transaction.
+   */
+  protected function constructDatabaseSpans() {
+    $spans = [];
+
+    // First, go through all queries that have been run for this request.
+    $connections = [];
+    foreach (Database::getAllConnectionInfo() as $key => $info) {
+      $database = Database::getConnection('default', $key);
+      $connections[$key] = $database->getLogger()->get('elastic_apm');
+    }
+
+    // Now, create a span for each query that was run.
+    foreach ($connections as $key => $queries) {
+      foreach ($queries as $query) {
+        // Change duration time to milliseconds.
+        $query['time'] = $query['time'] * 1000;
+        $query['database'] = $key;
+
+        $spans[] = $query;
+      }
+    }
+
+    return $spans;
   }
 
 }
