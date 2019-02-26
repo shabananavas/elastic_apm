@@ -55,8 +55,15 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
     $this->account = $account;
 
     // Initialize our PHP Agent.
+    // Fetch the configs.
+    $elastic_config = $this->config->get();
+    // Set the apmVersion to v1 if it's empty as the PHP Agent doesn't.
+    if (empty($elastic_config['apmVersion'])) {
+      $elastic_config['apmVersion'] = 'v1';
+    }
+
     $this->phpAgent = new Agent(
-      $this->config->get(),
+      $elastic_config,
       [
         'user' => [
           'id' => $this->account->id(),
