@@ -49,6 +49,7 @@ class ConfigurationForm extends ConfigFormBase {
       '#title' => $this->t('Server URL'),
       '#default_value' => $config->get('serverUrl'),
       '#description' => $this->t('APM Server Endpoint'),
+      '#required' => TRUE,
     ];
 
     $form['application_configuration']['secret_token'] = [
@@ -56,6 +57,7 @@ class ConfigurationForm extends ConfigFormBase {
       '#title' => $this->t('Secret Token'),
       '#default_value' => $config->get('secretToken'),
       '#description' => $this->t('Secret token for APM Server'),
+      '#required' => TRUE,
     ];
 
     $form['application_configuration']['host_name'] = [
@@ -63,6 +65,7 @@ class ConfigurationForm extends ConfigFormBase {
       '#title' => $this->t('Host name'),
       '#default_value' => $config->get('hostname'),
       '#description' => $this->t('Hostname to transmit to the APM Server'),
+      '#required' => TRUE,
     ];
 
     $form['application_configuration']['advanced'] = [
