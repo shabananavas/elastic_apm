@@ -139,8 +139,6 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   The request event object.
-   *
-   * @throws \PhilKra\Exception\Transaction\DuplicateTransactionNameException
    */
   public function onRequest(GetResponseEvent $event) {
     // If this is a sub request, only process it if there was no master
@@ -154,11 +152,8 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     try {
       $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
 
-      // Capture database time.
+      // Capture database time by wrapping spans around the db queries run.
       $transaction->setSpans($this->constructDatabaseSpans());
-
-      // Send our transaction to Elastic.
-      $this->phpAgent->send();
     }
     catch (\Exception $e) {
       // Notify the user of the error.
@@ -178,8 +173,6 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *
    * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
    *   The terminated event object.
-   *
-   * @throws \PhilKra\Exception\Transaction\UnknownTransactionException
    */
   public function onTerminate(PostResponseEvent $event) {
     // End the transaction.
@@ -218,15 +211,30 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     // Now, create a span for each query that was run.
     foreach ($connections as $key => $queries) {
       foreach ($queries as $query) {
-        // Add necessary schema info for the APM server.
-        $query['name'] = $query['caller']['function'];
-        $query['type'] = 'db.mysql.query';
-        $query['database'] = $key;
-        // Change duration time to milliseconds.
-        $query['duration'] = $query['time'] * 1000;
-        $query['start'] = 0;
+        $span = [];
+        // Add the necessary schema info for the APM server.
+        $span['name'] = $query['caller']['function'];
+        $span['type'] = 'db.mysql.query';
+        // This is the query start time relative to the transaction start.
+        $span['start'] = 0;
+        // Change duration time of query to milliseconds.
+        $span['duration'] = $query['time'] * 1000;
+        $span['stacktrace'] = [
+          'function' => $query['caller']['function'],
+          'abs_path' => $query['caller']['file'],
+          'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
+          'lineno' => $query['caller']['line'],
+          'vars' => $query['args'],
+        ];
+        $span['context'] = [
+          'db' => [
+            'instance' => $key,
+            'statement' => $query['query'],
+            'type' => 'sql',
+          ],
+        ];
 
-        $spans[] = $query;
+        $spans[] = $span;
       }
     }
 
