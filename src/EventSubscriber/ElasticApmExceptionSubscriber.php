@@ -101,6 +101,7 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
 
     // Send the exception to Elastic.
     $this->phpAgent->captureThrowable($event->getException());
+    $this->phpAgent->send();
   }
 
 }
