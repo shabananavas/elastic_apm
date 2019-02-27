@@ -10,11 +10,12 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
 
+use Exception;
 use PhilKra\Agent;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -128,7 +129,7 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   public static function getSubscribedEvents() {
     return [
       KernelEvents::REQUEST => ['onRequest', 30],
-      KernelEvents::TERMINATE => ['onTerminate', 300],
+      KernelEvents::RESPONSE => ['onResponse', 300],
     ];
 
     return $events;
@@ -155,7 +156,7 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
       // Capture database time by wrapping spans around the db queries run.
       $transaction->setSpans($this->constructDatabaseSpans());
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Notify the user of the error.
       $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
 
@@ -171,10 +172,10 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   /**
    * End the transaction and send to PHP Agent whenever this event is triggered.
    *
-   * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
-   *   The terminated event object.
+   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   *   The event to process.
    */
-  public function onTerminate(PostResponseEvent $event) {
+  public function onResponse(FilterResponseEvent $event) {
     // End the transaction.
     try {
       $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
@@ -182,7 +183,7 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
       // Send our transaction to Elastic.
       $this->phpAgent->send();
     }
-    catch (\Exception $e) {
+    catch (Exception $e) {
       // Notify the user of the error.
       $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
 
@@ -219,18 +220,20 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
         $span['start'] = 0;
         // Change duration time of query to milliseconds.
         $span['duration'] = $query['time'] * 1000;
-        $span['stacktrace'] = [
-          'function' => $query['caller']['function'],
-          'abs_path' => $query['caller']['file'],
-          'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
-          'lineno' => $query['caller']['line'],
-          'vars' => $query['args'],
-        ];
         $span['context'] = [
           'db' => [
             'instance' => $key,
             'statement' => $query['query'],
             'type' => 'sql',
+          ],
+        ];
+        $span['stacktrace'] = [
+          [
+            'function' => $query['caller']['function'],
+            'abs_path' => $query['caller']['file'],
+            'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
+            'lineno' => $query['caller']['line'],
+            'vars' => $query['args'],
           ],
         ];
 
