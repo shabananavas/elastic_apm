@@ -9,11 +9,16 @@ services:
     tags:
       - { name: http_middleware, priority: 350 }
 
-  elastic_apm.request_event_subscriber:
-    class: Drupal\elastic_apm\EventSubscriber\ElasticApmRequestSubscriber
+  elastic_apm.service:
+    class: Drupal\elastic_apm\ElasticApm
     arguments:
       - '@config.factory'
       - '@current_user'
+
+  elastic_apm.request_event_subscriber:
+    class: Drupal\elastic_apm\EventSubscriber\ElasticApmRequestSubscriber
+    arguments:
+      - '@elastic_apm.service'
       - '@current_route_match'
       - '@logger.channel.elastic_apm'
       - '@messenger'

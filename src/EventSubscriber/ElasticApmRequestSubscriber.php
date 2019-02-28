@@ -2,16 +2,15 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
 
+use Drupal\elastic_apm\ElasticApmInterface;
+
 use Exception;
-use PhilKra\Agent;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
@@ -29,18 +28,11 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   use StringTranslationTrait;
 
   /**
-   * The elastic_apm configuration.
+   * The Elastic APM service object.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\elastic_apm\ElasticApmInterface
    */
-  protected $config;
-
-  /**
-   * The current account.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $account;
+  protected $elasticApm;
 
   /**
    * The current path.
@@ -64,7 +56,7 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   protected $messenger;
 
   /**
-   * The PHP agent for the Elastic APM.
+   * The actual PHP Agent for the Elastic APM server.
    *
    * @var \PhilKra\Agent
    */
@@ -80,10 +72,8 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   /**
    * Constructs a ElasticApmRequestSubscriber object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory service.
-   * @param \Drupal\Core\Session\AccountProxyInterface $account
-   *   The current account.
+   * @param \Drupal\elastic_apm\ElasticApmInterface $elastic_apm
+   *   The Elastic APM service object.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route.
    * @param \Psr\Log\LoggerInterface $logger
@@ -92,35 +82,18 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The messenger.
    */
   public function __construct(
-    ConfigFactoryInterface $config_factory,
-    AccountProxyInterface $account,
+    ElasticApmInterface $elastic_apm,
     RouteMatchInterface $route_match,
     LoggerInterface $logger,
     MessengerInterface $messenger
   ) {
-    $this->config = $config_factory->get('elastic_apm.configuration');
-    $this->account = $account;
+    $this->elasticApm = $elastic_apm;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
     $this->messenger = $messenger;
 
-    // Initialize our PHP Agent.
-    // Fetch the configs.
-    $elastic_config = $this->config->get();
-    // Set the apmVersion to v1 if it's empty as the PHP Agent doesn't.
-    if (empty($elastic_config['apmVersion'])) {
-      $elastic_config['apmVersion'] = 'v1';
-    }
-
-    $this->phpAgent = new Agent(
-      $elastic_config,
-      [
-        'user' => [
-          'id' => $this->account->id(),
-          'email' => $this->account->getEmail(),
-        ],
-      ]
-    );
+    // Fetch our initialized PHP agent.
+    $this->phpAgent = $this->elasticApm->getAgent();
   }
 
   /**
@@ -142,6 +115,11 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The request event object.
    */
   public function onRequest(GetResponseEvent $event) {
+    // Don't process if Elastic APM is not configured.
+    if (!$this->elasticApm->isConfigured()) {
+      return;
+    }
+
     // If this is a sub request, only process it if there was no master
     // request yet. In that case, it is probably a page not found or access
     // denied page.
@@ -176,6 +154,11 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The event to process.
    */
   public function onResponse(FilterResponseEvent $event) {
+    // Don't process if Elastic APM is not configured.
+    if (!$this->elasticApm->isConfigured()) {
+      return;
+    }
+
     // End the transaction.
     try {
       $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
