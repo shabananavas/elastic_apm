@@ -2,10 +2,8 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\elastic_apm\ElasticApmInterface;
 
-use PhilKra\Agent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -19,21 +17,14 @@ use Symfony\Component\HttpKernel\KernelEvents;
 class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
 
   /**
-   * The elastic_apm configuration.
+   * The Elastic APM service object.
    *
-   * @var \Drupal\Core\Config\ImmutableConfig
+   * @var \Drupal\elastic_apm\ElasticApmInterface
    */
-  protected $config;
+  protected $elasticApm;
 
   /**
-   * The current account.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $account;
-
-  /**
-   * The PHP agent for the Elastic APM.
+   * The actual PHP Agent.
    *
    * @var \PhilKra\Agent
    */
@@ -42,35 +33,14 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
   /**
    * Constructs a ElasticApmExceptionSubscriber object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory service.
-   * @param \Drupal\Core\Session\AccountProxyInterface $account
-   *   The current account.
+   * @param \Drupal\elastic_apm\ElasticApmInterface $elastic_apm
+   *   The Elastic APM service object.
    */
-  public function __construct(
-    ConfigFactoryInterface $config_factory,
-    AccountProxyInterface $account
-  ) {
-    $this->config = $config_factory->get('elastic_apm.configuration');
-    $this->account = $account;
+  public function __construct(ElasticApmInterface $elastic_apm) {
+    $this->elasticApm = $elastic_apm;
 
-    // Initialize our PHP Agent.
-    // Fetch the configs.
-    $elastic_config = $this->config->get();
-    // Set the apmVersion to v1 if it's empty as the PHP Agent doesn't.
-    if (empty($elastic_config['apmVersion'])) {
-      $elastic_config['apmVersion'] = 'v1';
-    }
-
-    $this->phpAgent = new Agent(
-      $elastic_config,
-      [
-        'user' => [
-          'id' => $this->account->id(),
-          'email' => $this->account->getEmail(),
-        ],
-      ]
-    );
+    // Fetch our initialized PHP agent.
+    $this->phpAgent = $this->elasticApm->getAgent();
   }
 
   /**
@@ -89,8 +59,13 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
    *   The request event object.
    */
   public function onException(GetResponseForExceptionEvent $event) {
+    // Don't process if Elastic APM is not configured.
+    if (!$this->elasticApm->isConfigured()) {
+      return;
+    }
+
     // Only log the exception if the capture_exceptions config is checked.
-    if (!$this->config->get('capture_exceptions')) {
+    if (!$this->elasticApm->getConfig()['capture_exceptions']) {
       return;
     }
 
