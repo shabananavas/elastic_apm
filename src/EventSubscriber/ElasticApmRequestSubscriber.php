@@ -92,8 +92,10 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     $this->logger = $logger;
     $this->messenger = $messenger;
 
-    // Fetch our initialized PHP agent.
-    $this->phpAgent = $this->elasticApm->getAgent();
+    // Initialize the PHP agent if the Elastic APM config is configured.
+    if ($this->elasticApm->isConfigured()) {
+      $this->phpAgent = $this->elasticApm->getAgent();
+    }
   }
 
   /**
