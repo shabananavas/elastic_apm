@@ -2,13 +2,18 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Database;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Utility\Error;
 
-use PhilKra\Agent;
+use Drupal\elastic_apm\ElasticApmInterface;
+
+use Exception;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -20,26 +25,14 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class ElasticApmRequestSubscriber implements EventSubscriberInterface {
 
-  /**
-   * The elastic_apm configuration.
-   *
-   * @var \Drupal\Core\Config\ImmutableConfig
-   */
-  protected $config;
+  use StringTranslationTrait;
 
   /**
-   * The current account.
+   * The Elastic APM service object.
    *
-   * @var \Drupal\Core\Session\AccountProxyInterface
+   * @var \Drupal\elastic_apm\ElasticApmInterface
    */
-  protected $account;
-
-  /**
-   * The PHP agent for the Elastic APM.
-   *
-   * @var \PhilKra\Agent
-   */
-  protected $phpAgent;
+  protected $elasticApm;
 
   /**
    * The current path.
@@ -49,11 +42,25 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   protected $routeMatch;
 
   /**
-   * The request stack.
+   * Logger service.
    *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
+   * @var \Psr\Log\LoggerInterface
    */
-  protected $requestStack;
+  protected $logger;
+
+  /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * The actual PHP Agent for the Elastic APM server.
+   *
+   * @var \PhilKra\Agent
+   */
+  protected $phpAgent;
 
   /**
    * A flag whether the master request was processed.
@@ -65,57 +72,54 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   /**
    * Constructs a ElasticApmRequestSubscriber object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The config factory service.
-   * @param \Drupal\Core\Session\AccountProxyInterface $account
-   *   The current account.
+   * @param \Drupal\elastic_apm\ElasticApmInterface $elastic_apm
+   *   The Elastic APM service object.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger service.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger.
    */
   public function __construct(
-    ConfigFactoryInterface $config_factory,
-    AccountProxyInterface $account,
+    ElasticApmInterface $elastic_apm,
     RouteMatchInterface $route_match,
-    RequestStack $request_stack
+    LoggerInterface $logger,
+    MessengerInterface $messenger
   ) {
-    $this->config = $config_factory->get('elastic_apm.configuration');
-    $this->account = $account;
+    $this->elasticApm = $elastic_apm;
     $this->routeMatch = $route_match;
-    $this->requestStack = $request_stack;
+    $this->logger = $logger;
+    $this->messenger = $messenger;
 
-    // Initialize our PHP Agent.
-    $this->phpAgent = new Agent(
-      $this->config->get(),
-      [
-        'user' => [
-          'id' => $this->account->id(),
-          'email' => $this->account->getEmail(),
-        ],
-      ]
-    );
+    // Fetch our initialized PHP agent.
+    $this->phpAgent = $this->elasticApm->getAgent();
   }
 
   /**
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    // Run after RouterListener, which has priority 32.
-    return [KernelEvents::REQUEST => ['onRequest', 30]];
+    return [
+      KernelEvents::REQUEST => ['onRequest', 30],
+      KernelEvents::RESPONSE => ['onResponse', 300],
+    ];
 
     return $events;
   }
 
   /**
-   * Send statistics to the PHP Agent whenever the request event is triggered.
+   * Start a transaction for the PHP Agent whenever this event is triggered.
    *
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   The request event object.
-   *
-   * @throws \PhilKra\Exception\Transaction\DuplicateTransactionNameException
    */
   public function onRequest(GetResponseEvent $event) {
+    // Don't process if Elastic APM is not configured.
+    if (!$this->elasticApm->isConfigured()) {
+      return;
+    }
+
     // If this is a sub request, only process it if there was no master
     // request yet. In that case, it is probably a page not found or access
     // denied page.
@@ -124,23 +128,103 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     }
 
     // Start a new transaction.
-    $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
+    try {
+      $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
 
-    // Create a span to capture the database time.
-    $spans = [];
-    // TODO: Figure out what kind of db info goes here.
-    $spans[] = [
+      // Capture database time by wrapping spans around the db queries run.
+      $transaction->setSpans($this->constructDatabaseSpans());
+    }
+    catch (Exception $e) {
+      // Notify the user of the error.
+      $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
 
-    ];
+      // Log the error to watchdog.
+      $error = Error::decodeException($e);
+      $this->logger->log($error['severity_level'], '%type: @message in %function (line %line of %file).', $error);
+    }
 
-    // Add the span to the transaction.
-    $transaction->setSpans($spans);
-
-    // Send our transaction to Elastic.
-    $this->phpAgent->send();
-
-    // Set processedMasterRequest to TRUE.
+    // Mark the request as processed.
     $this->processedMasterRequest = TRUE;
+  }
+
+  /**
+   * End the transaction and send to PHP Agent whenever this event is triggered.
+   *
+   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   *   The event to process.
+   */
+  public function onResponse(FilterResponseEvent $event) {
+    // Don't process if Elastic APM is not configured.
+    if (!$this->elasticApm->isConfigured()) {
+      return;
+    }
+
+    // End the transaction.
+    try {
+      $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
+
+      // Send our transaction to Elastic.
+      $this->phpAgent->send();
+    }
+    catch (Exception $e) {
+      // Notify the user of the error.
+      $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
+
+      // Log the error to watchdog.
+      $error = Error::decodeException($e);
+      $this->logger->log($error['severity_level'], '%type: @message in %function (line %line of %file).', $error);
+    }
+  }
+
+  /**
+   * Create spans around the db queries that were run in this request.
+   *
+   * @return array
+   *   An array of spans that will be added to the transaction.
+   */
+  protected function constructDatabaseSpans() {
+    $spans = [];
+
+    // First, go through all queries that have been run for this request.
+    $connections = [];
+    foreach (Database::getAllConnectionInfo() as $key => $info) {
+      $database = Database::getConnection('default', $key);
+      $connections[$key] = $database->getLogger()->get('elastic_apm');
+    }
+
+    // Now, create a span for each query that was run.
+    foreach ($connections as $key => $queries) {
+      foreach ($queries as $query) {
+        $span = [];
+        // Add the necessary schema info for the APM server.
+        $span['name'] = $query['caller']['function'];
+        $span['type'] = 'db.mysql.query';
+        // This is the query start time relative to the transaction start.
+        $span['start'] = 0;
+        // Change duration time of query to milliseconds.
+        $span['duration'] = $query['time'] * 1000;
+        $span['context'] = [
+          'db' => [
+            'instance' => $key,
+            'statement' => $query['query'],
+            'type' => 'sql',
+          ],
+        ];
+        $span['stacktrace'] = [
+          [
+            'function' => $query['caller']['function'],
+            'abs_path' => $query['caller']['file'],
+            'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
+            'lineno' => $query['caller']['line'],
+            'vars' => $query['args'],
+          ],
+        ];
+
+        $spans[] = $span;
+      }
+    }
+
+    return $spans;
   }
 
 }
