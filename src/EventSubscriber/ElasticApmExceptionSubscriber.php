@@ -39,8 +39,10 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
   public function __construct(ElasticApmInterface $elastic_apm) {
     $this->elasticApm = $elastic_apm;
 
-    // Fetch our initialized PHP agent.
-    $this->phpAgent = $this->elasticApm->getAgent();
+    // Initialize the PHP agent if the Elastic APM config is configured.
+    if ($this->elasticApm->isConfigured()) {
+      $this->phpAgent = $this->elasticApm->getAgent();
+    }
   }
 
   /**
