@@ -3,6 +3,7 @@
 namespace Drupal\Tests\elastic_apm\Functional;
 
 use Drupal\Tests\BrowserTestBase;
+use function uniqid;
 
 const ELASTIC_APM_TEST_APP_NAME = 'Dev Test';
 const ELASTIC_APM_TEST_SERVER_URL = 'https://90513fabda504d4e803580956a3fb037.apm.us-west-1.aws.cloud.es.io:443';
@@ -22,7 +23,7 @@ class ElasticApmTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = ['elastic_apm'];
+  public static $modules = ['node', 'elastic_apm'];
 
   /**
    * {@inheritdoc}
@@ -30,7 +31,9 @@ class ElasticApmTest extends BrowserTestBase {
   protected function setUp() {
     parent::setUp();
 
-    $admin_user = $this->drupalCreateUser(['access administration pages']);
+    $this->drupalCreateContentType(['type' => 'page', 'name' => 'Basic page']);
+
+    $admin_user = $this->drupalCreateUser(['access content', 'access administration pages']);
     $admin_user->setEmail('acro_dev@example.com');
     $this->drupalLogin($admin_user);
   }
@@ -73,31 +76,55 @@ class ElasticApmTest extends BrowserTestBase {
    * Test that we can successfully send transactions to the Elastic APM server.
    */
   public function testElasticApmTransaction() {
-    // First, let's set the configs.
-    $config_factory = $this->container->get('config.factory');
-    $config = $config_factory->get('elastic_apm.configuration');
+    // First, let's save the configs.
+    $this->drupalGet('admin/config/development/performance/elastic-apm');
+    $this->submitForm([
+      'app_name' => ELASTIC_APM_TEST_APP_NAME,
+      'server_url' => ELASTIC_APM_TEST_SERVER_URL,
+      'secret_token' => ELASTIC_APM_TEST_SECRET_TOKEN,
+    ], t('Save configuration'));
 
-    $config->set('appName', ELASTIC_APM_TEST_APP_NAME)
-      ->set('serverUrl', ELASTIC_APM_TEST_SERVER_URL)
-      ->set('secretToken', ELASTIC_APM_TEST_SECRET_TOKEN)
-      ->save();
-
-    // Make a page request, so that the transaction will be sent to Elastic.
-    $this->drupalGet('node/add');
+    // Now create a page node with a unique title. We make the path unique so
+    // that the transaction name will be unique in the APM server as well.
+    $this->drupalGet('node/add/page');
+    $unique_id = uniqid();
+    $title = 'Test Elastic APM' . $unique_id;
+    $path_alias = '/test-elastic-apm' . $unique_id;
+    $edit = array(
+      'title[0][value]' => $title,
+      'path[0][alias]' => $path_alias,
+    );
+    $this->drupalPostForm('node/add/page', $edit, t('Save'));
     $this->assertSession()->statusCodeEquals(200);
 
-    // Now, fetch the transactions from Elastic to check if our request was
-    // actually sent.
+    // Make a page request to this new page, so that the transaction will be
+    // sent to Elastic.
+    $this->drupalGet($path_alias);
+
+    // Now, fetch the transactions made today, from Elastic, to check if our
+    // request was actually sent.
     $http_client = \Drupal::httpClient();
     $date = date('Y-m-d');
     $response = $http_client->get(ELASTIC_APM_GET_URL . '/apm-' . ELASTIC_APM_VERSION . '-transaction-' . $date . '/_search');
     $results = json_decode($response->getBody(), TRUE);
 
+    // Verify that there are transactions for this date.
     $this->assertArrayHasKey('hits', $results);
-    $this->assertEquals(1, $results['hits']['total']);
-    $this->assertEquals('node.add_page', $results['hits']['hits'][0]['transaction']['name']);
-    $this->assertNotNull('node.add_page', $results['hits']['hits'][0]['transaction']['id']);
-    $this->assertEquals('acro_dev@example.com', $results['hits']['hits'][0]['context']['user']['email']);
+    $this->assertNotEquals(0, $results['hits']['total']);
+
+    // Now go through the array of transactions to see if our page link exists.
+    foreach ($results['hits']['hits'] as $key => $hit) {
+      if ($hit['transaction']['name'] != 'node.add_page') {
+        continue;
+      }
+
+      if ($hit['context']['request']['REQUEST_URI'] != $path_alias) {
+        continue;
+      }
+
+      $this->assertTrue($hit['context']['request']['REQUEST_URI'] == $path_alias, 'Transaction exists in Elastic APM server.');
+      $this->assertEquals('acro_dev@example.com', $hit['context']['context']['user']['email']);
+    }
   }
 
 }
