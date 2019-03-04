@@ -13,7 +13,7 @@ use Drupal\elastic_apm\ElasticApmInterface;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -104,7 +104,7 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   public static function getSubscribedEvents() {
     return [
       KernelEvents::REQUEST => ['onRequest', 30],
-      KernelEvents::RESPONSE => ['onResponse', 300],
+      KernelEvents::FINISH_REQUEST => ['onFinishRequest', 300],
     ];
 
     return $events;
@@ -152,10 +152,10 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   /**
    * End the transaction and send to PHP Agent whenever this event is triggered.
    *
-   * @param \Symfony\Component\HttpKernel\Event\FilterResponseEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\FinishRequestEvent $event
    *   The event to process.
    */
-  public function onResponse(FilterResponseEvent $event) {
+  public function onFinishRequest(FinishRequestEvent $event) {
     // Don't process if Elastic APM is not configured.
     if (!$this->elasticApm->isConfigured()) {
       return;
