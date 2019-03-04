@@ -161,6 +161,12 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    // Don't process if we don't have a PHP Agent already initialized, meaning,
+    // no transaction is in process.
+    if (!$this->phpAgent) {
+      return;
+    }
+
     // End the transaction.
     try {
       $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
