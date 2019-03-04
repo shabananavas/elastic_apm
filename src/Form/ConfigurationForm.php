@@ -94,14 +94,14 @@ class ConfigurationForm extends ConfigFormBase {
     $form['application_configuration']['advanced']['env'] = [
       '#type' => 'textarea',
       '#title' => $this->t('$_SERVER variables'),
-      '#default_value' => implode(PHP_EOL, $config->get('env')),
+      '#default_value' => !empty($config->get('env')) ? implode(PHP_EOL, $config->get('env')) : '',
       '#description' => $this->t('$_SERVER variables to send to the APM server, empty set sends all. Keys are case sensitive. <strong>Enter one per line.</strong>'),
     ];
 
     $form['application_configuration']['advanced']['cookies'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Cookies'),
-      '#default_value' => implode(PHP_EOL, $config->get('cookies')),
+      '#default_value' => !empty($config->get('cookies')) ? implode(PHP_EOL, $config->get('cookies')) : '',
       '#description' => $this->t('Cookies to send to the APM server, empty set sends all. Keys are case sensitive. <strong>Enter one per line.</strong>'),
     ];
 
