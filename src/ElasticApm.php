@@ -81,7 +81,8 @@ class ElasticApm implements ElasticApmInterface {
     $elastic_apm_config = $this->config->get();
 
     if (
-      empty($elastic_apm_config['appName'])
+      !$elastic_apm_config['active']
+      || empty($elastic_apm_config['appName'])
       || empty($elastic_apm_config['serverUrl'])
       || empty($elastic_apm_config['secretToken'])
     ) {
