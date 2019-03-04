@@ -1,0 +1,14 @@
+appName: ''
+appVersion: ''
+serverUrl: ''
+secretToken: ''
+hostname: ''
+timeout: 5
+apmVersion: 'v1'
+env: []
+cookies: []
+httpClient:
+  verify: FALSE
+  proxy: ''
+capture_exceptions: FALSE
+active: FALSE
