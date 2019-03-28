@@ -17,4 +17,5 @@ Currently, the module page on d.org is here: https://www.drupal.org/sandbox/shab
 ```
 
 - Install the module via composer `composer require drupal/elastic_apm:dev-develop`
+
 <strong>Until the current PRs are merged, the 'develop' version should be used to see the module in full action.</strong>
