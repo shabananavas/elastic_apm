@@ -5,18 +5,18 @@ services:
     arguments: ['elastic_apm']
 
   http_middleware.elastic_apm:
-    class: Drupal\elastic_apm\StackMiddleware\ElasticApmMiddleware
+    class: Drupal\elastic_apm\StackMiddleware\Middleware
     tags:
       - { name: http_middleware, priority: 350 }
 
   elastic_apm.service:
-    class: Drupal\elastic_apm\ElasticApm
+    class: Drupal\elastic_apm\ApiService
     arguments:
       - '@config.factory'
       - '@current_user'
 
   elastic_apm.request_event_subscriber:
-    class: Drupal\elastic_apm\EventSubscriber\ElasticApmRequestSubscriber
+    class: Drupal\elastic_apm\EventSubscriber\RequestSubscriber
     arguments:
       - '@elastic_apm.service'
       - '@current_route_match'
