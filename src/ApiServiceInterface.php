@@ -11,6 +11,14 @@ namespace Drupal\elastic_apm;
 interface ApiServiceInterface {
 
   /**
+   * Returns the Elastic APM configuration array.
+   *
+   * @return array
+   *   An array of Elastic APM configs.
+   */
+  public function getConfig();
+
+  /**
    * Returns an initialized Elastic APM PHP Agent.
    *
    * @return \PhilKra\Agent

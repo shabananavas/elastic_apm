@@ -47,6 +47,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getConfig() {
+    return $this->config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAgent() {
     // Initialize and return our PHP Agent.
     return new Agent(
