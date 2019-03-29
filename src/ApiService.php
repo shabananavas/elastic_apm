@@ -2,6 +2,7 @@
 
 namespace Drupal\elastic_apm;
 
+use Drupal;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 
@@ -48,7 +49,15 @@ class ApiService implements ApiServiceInterface {
    * {@inheritdoc}
    */
   public function getConfig() {
-    return $this->config;
+    $config = $this->config;
+
+    // Add the Drupal framework details here.
+    $config += [
+      'framework' => 'Drupal',
+      'frameworkVersion' => Drupal::VERSION,
+    ];
+
+    return $config;
   }
 
   /**
@@ -64,7 +73,7 @@ class ApiService implements ApiServiceInterface {
 
     // Initialize and return our PHP Agent.
     return new Agent(
-      $this->config,
+      $this->getConfig(),
       $options
     );
   }
@@ -73,7 +82,7 @@ class ApiService implements ApiServiceInterface {
    * {@inheritdoc}
    */
   public function isEnabled() {
-    return $this->config['active'];
+    return $this->getConfig()['active'];
   }
 
   /**
@@ -88,8 +97,9 @@ class ApiService implements ApiServiceInterface {
       'secretToken',
       'apmVersion',
     ];
+    $config = $this->getConfig();
     foreach ($required_settings as $key) {
-      if (empty($this->config[$key])) {
+      if (empty($config[$key])) {
         $is_configured = FALSE;
         break;
       }
