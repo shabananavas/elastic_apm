@@ -7,7 +7,6 @@ use Drupal\elastic_apm\ApiServiceInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Utility\Error;
 
 use Exception;
 use Psr\Log\LoggerInterface;
