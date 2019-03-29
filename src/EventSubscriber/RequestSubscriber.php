@@ -93,8 +93,6 @@ class RequestSubscriber implements EventSubscriberInterface {
       KernelEvents::REQUEST => ['onRequest', 30],
       KernelEvents::FINISH_REQUEST => ['onFinishRequest', 300],
     ];
-
-    return $events;
   }
 
   /**
