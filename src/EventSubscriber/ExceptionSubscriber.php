@@ -2,7 +2,7 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
-use Drupal\elastic_apm\ElasticApmInterface;
+use Drupal\elastic_apm\ApiServiceInterface;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
@@ -14,14 +14,14 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *
  * @package Drupal\elastic_apm\EventSubscriber
  */
-class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
+class ExceptionSubscriber implements EventSubscriberInterface {
 
   /**
    * The Elastic APM service object.
    *
-   * @var \Drupal\elastic_apm\ElasticApmInterface
+   * @var \Drupal\elastic_apm\ApiServiceInterface
    */
-  protected $elasticApm;
+  protected $apiService;
 
   /**
    * The actual PHP Agent.
@@ -31,17 +31,17 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
   protected $phpAgent;
 
   /**
-   * Constructs a ElasticApmExceptionSubscriber object.
+   * Constructs a ExceptionSubscriber object.
    *
-   * @param \Drupal\elastic_apm\ElasticApmInterface $elastic_apm
+   * @param \Drupal\elastic_apm\ApiServiceInterface $api_service
    *   The Elastic APM service object.
    */
-  public function __construct(ElasticApmInterface $elastic_apm) {
-    $this->elasticApm = $elastic_apm;
+  public function __construct(ApiServiceInterface $api_service) {
+    $this->apiService = $api_service;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
-    if ($this->elasticApm->isConfigured()) {
-      $this->phpAgent = $this->elasticApm->getAgent();
+    if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
+      $this->phpAgent = $this->apiService->getAgent();
     }
   }
 
@@ -61,13 +61,18 @@ class ElasticApmExceptionSubscriber implements EventSubscriberInterface {
    *   The request event object.
    */
   public function onException(GetResponseForExceptionEvent $event) {
-    // Don't process if Elastic APM is not configured.
-    if (!$this->elasticApm->isConfigured()) {
+    // Return if Elastic isn't enabled.
+    if (!$this->apiService->isEnabled()) {
       return;
     }
 
-    // Only log the exception if the capture_exceptions config is checked.
-    if (!$this->elasticApm->getConfig()['capture_exceptions']) {
+    // Don't process if Elastic APM is not configured.
+    if (!$this->apiService->isConfigured()) {
+      return;
+    }
+
+    // Only log the exception if the captureExceptions config is checked.
+    if (!$this->apiService->getConfig()['captureExceptions']) {
       return;
     }
 

@@ -2,13 +2,13 @@
 
 namespace Drupal\elastic_apm\EventSubscriber;
 
+use Drupal\elastic_apm\ApiServiceInterface;
+
 use Drupal\Core\Database\Database;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
-
-use Drupal\elastic_apm\ApiServiceInterface;
 
 use Exception;
 use Psr\Log\LoggerInterface;

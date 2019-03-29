@@ -26,7 +26,7 @@ services:
       - {name: event_subscriber}
 
   elastic_apm.exception_event_subscriber:
-    class: Drupal\elastic_apm\EventSubscriber\ElasticApmExceptionSubscriber
+    class: Drupal\elastic_apm\EventSubscriber\ExceptionSubscriber
     arguments:
       - '@elastic_apm.service'
     tags:
