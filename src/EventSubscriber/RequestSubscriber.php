@@ -5,7 +5,6 @@ namespace Drupal\elastic_apm\EventSubscriber;
 use Drupal\elastic_apm\ApiServiceInterface;
 
 use Drupal\Core\Database\Database;
-use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
@@ -49,13 +48,6 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected $logger;
 
   /**
-   * The messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
    * The actual PHP Agent for the Elastic APM server.
    *
    * @var \PhilKra\Agent
@@ -78,19 +70,15 @@ class RequestSubscriber implements EventSubscriberInterface {
    *   The current route.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger.
    */
   public function __construct(
     ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
-    LoggerInterface $logger,
-    MessengerInterface $messenger
+    LoggerInterface $logger
   ) {
     $this->apiService = $api_service;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
-    $this->messenger = $messenger;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
@@ -142,14 +130,11 @@ class RequestSubscriber implements EventSubscriberInterface {
       $transaction->setSpans($this->constructDatabaseSpans());
     }
     catch (Exception $e) {
-      // Notify the user of the error.
-      $this->messenger->addError(
-        $this->t('An error occurred while trying to send the transaction to the Elastic APM server.')
-      );
-
       // Log the error to watchdog.
-      $error = Error::decodeException($e);
-      $this->logger->log($error['severity_level'], '%type: @message in %function (line %line of %file).', $error);
+      $this->logger->error($this->t(
+        'An error occurred while trying to start a transaction for the Elastic APM server. The error was @error.', [
+        '@error' => $e->getMessage(),
+      ]));
     }
 
     // Mark the request as processed.
@@ -187,14 +172,11 @@ class RequestSubscriber implements EventSubscriberInterface {
       $this->phpAgent->send();
     }
     catch (Exception $e) {
-      // Notify the user of the error.
-      $this->messenger->addError(
-        $this->t('An error occurred while trying to send the transaction to the Elastic APM server.')
-      );
-
       // Log the error to watchdog.
-      $error = Error::decodeException($e);
-      $this->logger->log($error['severity_level'], '%type: @message in %function (line %line of %file).', $error);
+      $this->logger->error($this->t(
+        'An error occurred while trying to send the transaction to the Elastic APM server. The error was @error.', [
+          '@error' => $e->getMessage(),
+      ]));
     }
   }
 
