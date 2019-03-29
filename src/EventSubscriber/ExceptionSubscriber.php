@@ -49,9 +49,9 @@ class ExceptionSubscriber implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[KernelEvents::EXCEPTION][] = ['onException', -300];
-
-    return $events;
+    return [
+      KernelEvents::EXCEPTION => ['onException', -300],
+    ];
   }
 
   /**
