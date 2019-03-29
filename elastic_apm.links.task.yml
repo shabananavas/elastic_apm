@@ -1,4 +1,4 @@
 elastic_apm.configuration:
   title: 'Elastic APM'
   route_name: 'elastic_apm.configuration'
-  base_route: 'system.performance_settings'
+  base_route: 'elastic_apm.configuration'

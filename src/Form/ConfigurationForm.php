@@ -32,19 +32,20 @@ class ConfigurationForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('elastic_apm.configuration');
 
-    $form['application_configuration'] = [
+    $form['connection'] = [
       '#type' => 'details',
-      '#title' => $this->t('Application configuration'),
+      '#title' => $this->t('Connection configuration'),
       '#open' => TRUE,
     ];
-    $form['application_configuration']['app_name'] = [
+
+    $form['connection']['app_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Application name'),
       '#default_value' => $config->get('appName'),
       '#required' => TRUE,
     ];
 
-    $form['application_configuration']['server_url'] = [
+    $form['connection']['server_url'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Server URL'),
       '#default_value' => $config->get('serverUrl'),
@@ -52,7 +53,7 @@ class ConfigurationForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    $form['application_configuration']['secret_token'] = [
+    $form['connection']['secret_token'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Secret token'),
       '#default_value' => $config->get('secretToken'),
@@ -60,75 +61,80 @@ class ConfigurationForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    $form['application_configuration']['host_name'] = [
+    $form['connection']['host_name'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Host name'),
       '#default_value' => $config->get('hostname'),
       '#description' => $this->t('Hostname to transmit to the APM server'),
     ];
 
-    $form['application_configuration']['advanced'] = [
+    $form['application'] = [
       '#type' => 'details',
-      '#title' => $this->t('Advanced configuration'),
+      '#title' => $this->t('Application configuration'),
     ];
 
-    $form['application_configuration']['advanced']['app_version'] = [
+    $form['application']['app_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Application version'),
       '#default_value' => $config->get('appVersion'),
     ];
 
-    $form['application_configuration']['advanced']['timeout'] = [
+    $form['application']['timeout'] = [
       '#type' => 'number',
       '#title' => $this->t('Guzzle client timeout'),
       '#default_value' => $config->get('timeout'),
     ];
 
-    $form['application_configuration']['advanced']['apm_version'] = [
+    $form['application']['apm_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('APM server intake API version'),
       '#description' => $this->t('<strong>Currently only the v1 intake API of the APM server is supported.</strong> Leave blank to use the v1 protocol.'),
       '#default_value' => $config->get('apmVersion'),
     ];
 
-    $form['application_configuration']['advanced']['env'] = [
+    $form['application']['env'] = [
       '#type' => 'textarea',
       '#title' => $this->t('$_SERVER variables'),
       '#default_value' => !empty($config->get('env')) ? implode(PHP_EOL, $config->get('env')) : '',
       '#description' => $this->t('$_SERVER variables to send to the APM server, empty set sends all. Keys are case sensitive. <strong>Enter one per line.</strong>'),
     ];
 
-    $form['application_configuration']['advanced']['cookies'] = [
+    $form['application']['cookies'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Cookies'),
       '#default_value' => !empty($config->get('cookies')) ? implode(PHP_EOL, $config->get('cookies')) : '',
       '#description' => $this->t('Cookies to send to the APM server, empty set sends all. Keys are case sensitive. <strong>Enter one per line.</strong>'),
     ];
 
-    $form['application_configuration']['advanced']['http_client'] = [
+    $form['application']['http_client'] = [
       '#type' => 'details',
       '#title' => $this->t('HTTP Client'),
     ];
 
-    $form['application_configuration']['advanced']['http_client']['verify'] = [
+    $form['application']['http_client']['verify'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Verify'),
       '#default_value' => $config->get('httpClient.verify'),
     ];
 
-    $form['application_configuration']['advanced']['http_client']['proxy'] = [
+    $form['application']['http_client']['proxy'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Proxy'),
       '#default_value' => $config->get('httpClient.proxy'),
     ];
 
-    $form['application_configuration']['capture_exceptions'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Capture errors and exceptions'),
-      '#default_value' => $config->get('capture_exceptions'),
+    $form['errors'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Error configuration'),
     ];
 
-    $form['application_configuration']['active'] = [
+    $form['errors']['capture_exceptions'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Capture errors and exceptions'),
+      '#default_value' => $config->get('captureExceptions'),
+    ];
+
+    $form['active'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
       '#default_value' => $config->get('active'),
@@ -156,7 +162,7 @@ class ConfigurationForm extends ConfigFormBase {
       ->set('apmVersion', $form_state->getValue('apm_version'))
       ->set('env', array_filter($environment_variables))
       ->set('cookies', array_filter($cookies))
-      ->set('capture_exceptions', $form_state->getValue('capture_exceptions'))
+      ->set('captureExceptions', $form_state->getValue('capture_exceptions'))
       ->set('httpClient', [
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],
