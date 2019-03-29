@@ -8,7 +8,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
 
-use Drupal\elastic_apm\ElasticApmInterface;
+use Drupal\elastic_apm\ApiServiceInterface;
 
 use Exception;
 use Psr\Log\LoggerInterface;
@@ -23,16 +23,16 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *
  * @package Drupal\elastic_apm\EventSubscriber
  */
-class ElasticApmRequestSubscriber implements EventSubscriberInterface {
+class RequestSubscriber implements EventSubscriberInterface {
 
   use StringTranslationTrait;
 
   /**
    * The Elastic APM service object.
    *
-   * @var \Drupal\elastic_apm\ElasticApmInterface
+   * @var \Drupal\elastic_apm\ApiServiceInterface
    */
-  protected $elasticApm;
+  protected $apiService;
 
   /**
    * The current path.
@@ -70,9 +70,9 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
   protected $processedMasterRequest = FALSE;
 
   /**
-   * Constructs a ElasticApmRequestSubscriber object.
+   * Constructs a RequestSubscriber object.
    *
-   * @param \Drupal\elastic_apm\ElasticApmInterface $elastic_apm
+   * @param \Drupal\elastic_apm\ApiServiceInterface $api_service
    *   The Elastic APM service object.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route.
@@ -82,19 +82,19 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The messenger.
    */
   public function __construct(
-    ElasticApmInterface $elastic_apm,
+    ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
     LoggerInterface $logger,
     MessengerInterface $messenger
   ) {
-    $this->elasticApm = $elastic_apm;
+    $this->apiService = $api_service;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
     $this->messenger = $messenger;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
-    if ($this->elasticApm->isConfigured()) {
-      $this->phpAgent = $this->elasticApm->getAgent();
+    if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
+      $this->phpAgent = $this->apiService->getAgent();
     }
   }
 
@@ -117,8 +117,13 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The request event object.
    */
   public function onRequest(GetResponseEvent $event) {
+    // Return if Elastic isn't enabled.
+    if (!$this->apiService->isEnabled()) {
+      return;
+    }
+
     // Don't process if Elastic APM is not configured.
-    if (!$this->elasticApm->isConfigured()) {
+    if (!$this->apiService->isConfigured()) {
       return;
     }
 
@@ -138,7 +143,9 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     }
     catch (Exception $e) {
       // Notify the user of the error.
-      $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
+      $this->messenger->addError(
+        $this->t('An error occurred while trying to send the transaction to the Elastic APM server.')
+      );
 
       // Log the error to watchdog.
       $error = Error::decodeException($e);
@@ -156,8 +163,13 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
    *   The event to process.
    */
   public function onFinishRequest(FinishRequestEvent $event) {
+    // Return if Elastic isn't enabled.
+    if (!$this->apiService->isEnabled()) {
+      return;
+    }
+
     // Don't process if Elastic APM is not configured.
-    if (!$this->elasticApm->isConfigured()) {
+    if (!$this->apiService->isConfigured()) {
       return;
     }
 
@@ -176,7 +188,9 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     }
     catch (Exception $e) {
       // Notify the user of the error.
-      $this->messenger->addError(t('An error occurred while trying to send the transaction to the Elastic APM server.'));
+      $this->messenger->addError(
+        $this->t('An error occurred while trying to send the transaction to the Elastic APM server.')
+      );
 
       // Log the error to watchdog.
       $error = Error::decodeException($e);
@@ -203,36 +217,52 @@ class ElasticApmRequestSubscriber implements EventSubscriberInterface {
     // Now, create a span for each query that was run.
     foreach ($connections as $key => $queries) {
       foreach ($queries as $query) {
-        $span = [];
-        // Add the necessary schema info for the APM server.
-        $span['name'] = $query['caller']['function'];
-        $span['type'] = 'db.mysql.query';
-        // This is the query start time relative to the transaction start.
-        $span['start'] = 0;
-        // Change duration time of query to milliseconds.
-        $span['duration'] = $query['time'] * 1000;
-        $span['context'] = [
-          'db' => [
-            'instance' => $key,
-            'statement' => $query['query'],
-            'type' => 'sql',
-          ],
-        ];
-        $span['stacktrace'] = [
-          [
-            'function' => $query['caller']['function'],
-            'abs_path' => $query['caller']['file'],
-            'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
-            'lineno' => $query['caller']['line'],
-            'vars' => $query['args'],
-          ],
-        ];
-
-        $spans[] = $span;
+        $spans[] = $this->constructQuerySpan($key, $query);
       }
     }
 
     return $spans;
+  }
+
+  /**
+   * Create a span for an individual database query.
+   *
+   * @param string $connection
+   *   The database connection name.
+   * @param array $query
+   *   An array of information about the query that was run.
+   *
+   * @return array
+   *   An array of necessary information about the query to send to Elastic.
+   */
+  protected function constructQuerySpan($connection, array $query) {
+    $span = [];
+
+    // Add the necessary schema info for the APM server.
+    $span['name'] = $query['caller']['function'];
+    $span['type'] = 'db.mysql.query';
+    // This is the query start time relative to the transaction start.
+    $span['start'] = 0;
+    // Change duration time of query to milliseconds.
+    $span['duration'] = $query['time'] * 1000;
+    $span['context'] = [
+      'db' => [
+        'instance' => $connection,
+        'statement' => $query['query'],
+        'type' => 'sql',
+      ],
+    ];
+    $span['stacktrace'] = [
+      [
+        'function' => $query['caller']['function'],
+        'abs_path' => $query['caller']['file'],
+        'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
+        'lineno' => $query['caller']['line'],
+        'vars' => $query['args'],
+      ],
+    ];
+
+    return $span;
   }
 
 }

@@ -4,11 +4,11 @@
 namespace Drupal\elastic_apm;
 
 /**
- * Interface for the Elastic APM service object.
+ * Interface for the APIService object.
  *
  * @package Drupal\elastic_apm
  */
-interface ElasticApmInterface {
+interface ApiServiceInterface {
 
   /**
    * Returns an initialized Elastic APM PHP Agent.
@@ -19,12 +19,12 @@ interface ElasticApmInterface {
   public function getAgent();
 
   /**
-   * Returns the Elastic APM configuration.
+   * Returns TRUE if the user has enabled Elastic APM.
    *
-   * @return array
-   *   The Elastic configuration.
+   * @return bool
+   *   TRUE if it is enabled.
    */
-  public function getConfig();
+  public function isEnabled();
 
   /**
    * Returns TRUE if the elastic_apm config object is configured.

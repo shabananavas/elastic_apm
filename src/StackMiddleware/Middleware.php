@@ -7,13 +7,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
- * Class ElasticApmMiddleware.
+ * Class Middleware.
  *
  * Log all database queries.
  *
  * @package Drupal\elastic_apm\StackMiddleware
  */
-class ElasticApmMiddleware implements HttpKernelInterface {
+class Middleware implements HttpKernelInterface {
 
   /**
    * The decorated kernel.
@@ -23,7 +23,7 @@ class ElasticApmMiddleware implements HttpKernelInterface {
   protected $httpKernel;
 
   /**
-   * Constructs a ElasticApmMiddleware object.
+   * Constructs a Middleware object.
    *
    * @param \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel
    *   The decorated kernel.
@@ -35,7 +35,10 @@ class ElasticApmMiddleware implements HttpKernelInterface {
   /**
    * {@inheritdoc}
    */
-  public function handle(Request $request, $type = self::MASTER_REQUEST, $catch = TRUE) {
+  public function handle(
+    Request $request, $type = self::MASTER_REQUEST,
+    $catch = TRUE
+  ) {
     foreach (Database::getAllConnectionInfo() as $key => $info) {
       Database::startLog('elastic_apm', $key);
     }

@@ -12,12 +12,12 @@ use PhilKra\Agent;
  *
  * @package Drupal\elastic_apm
  */
-class ElasticApm implements ElasticApmInterface {
+class ApiService implements ApiServiceInterface {
 
   /**
-   * A config object for the elastic_apm configuration.
+   * A config array for the elastic_apm configuration.
    *
-   * @var \Drupal\Core\Config\Config
+   * @var array
    */
   protected $config;
 
@@ -40,7 +40,7 @@ class ElasticApm implements ElasticApmInterface {
     ConfigFactoryInterface $configFactory,
     AccountProxyInterface $account
   ) {
-    $this->config = $configFactory->get('elastic_apm.configuration');
+    $this->config = $configFactory->get('elastic_apm.configuration')->get();
     $this->account = $account;
   }
 
@@ -50,7 +50,7 @@ class ElasticApm implements ElasticApmInterface {
   public function getAgent() {
     // Initialize and return our PHP Agent.
     return new Agent(
-      $this->getConfig(),
+      $this->config,
       [
         'user' => [
           'id' => $this->account->id(),
@@ -63,33 +63,30 @@ class ElasticApm implements ElasticApmInterface {
   /**
    * {@inheritdoc}
    */
-  public function getConfig() {
-    // Fetch the configs.
-    $elastic_apm_config = $this->config->get();
-    // Set the apmVersion to v1 if it's empty as the PHP Agent doesn't.
-    if (empty($elastic_apm_config['apmVersion'])) {
-      $elastic_apm_config['apmVersion'] = 'v1';
-    }
-
-    return $elastic_apm_config;
+  public function isEnabled() {
+    return $this->config['active'];
   }
 
   /**
    * {@inheritdoc}
    */
   public function isConfigured() {
-    $elastic_apm_config = $this->config->get();
+    $is_configured = TRUE;
 
-    if (
-      !$elastic_apm_config['active']
-      || empty($elastic_apm_config['appName'])
-      || empty($elastic_apm_config['serverUrl'])
-      || empty($elastic_apm_config['secretToken'])
-    ) {
-      return FALSE;
+    $required_settings = [
+      'appName',
+      'serverUrl',
+      'secretToken',
+      'apmVersion',
+    ];
+    foreach ($required_settings as $key) {
+      if (empty($this->config[$key])) {
+        $is_configured = FALSE;
+        break;
+      }
     }
 
-    return TRUE;
+    return $is_configured;
   }
 
 }
