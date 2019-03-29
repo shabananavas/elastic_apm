@@ -95,8 +95,9 @@ class ApiService implements ApiServiceInterface {
       'secretToken',
       'apmVersion',
     ];
+    $config = $this->getConfig();
     foreach ($required_settings as $key) {
-      if (empty($this->getConfig()[$key])) {
+      if (empty($config[$key])) {
         $is_configured = FALSE;
         break;
       }
