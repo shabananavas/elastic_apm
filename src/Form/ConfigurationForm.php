@@ -2,6 +2,7 @@
 
 namespace Drupal\elastic_apm\Form;
 
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -143,6 +144,15 @@ class ConfigurationForm extends ConfigFormBase {
     ];
 
     return parent::buildForm($form, $form_state);
+  }
+
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    parent::validateForm($form, $form_state);
+
+    // Check if APM server URL is valid.
+    if (!UrlHelper::isValid($form_state->getValue('server_url'), TRUE)) {
+      $form_state->setErrorByName('server_url', $this->t('The server URL is invalid.'));
+    }
   }
 
   /**
