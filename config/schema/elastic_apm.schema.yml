@@ -40,7 +40,7 @@ elastic_apm.configuration:
       proxy:
         type: label
         label: 'Proxy'
-    capture_exceptions:
+    captureExceptions:
       type: boolean
       label: 'Capture errors and exceptions'
     active:

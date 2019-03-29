@@ -1,5 +1,5 @@
 elastic_apm.configuration:
-  path: '/admin/config/development/performance/elastic-apm'
+  path: '/admin/config/development/elastic-apm'
   defaults:
     _form: '\Drupal\elastic_apm\Form\ConfigurationForm'
     _title: 'Elastic APM'
