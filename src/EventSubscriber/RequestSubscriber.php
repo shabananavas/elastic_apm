@@ -18,6 +18,16 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
+const ELASTIC_APM_PARENT_ROUTES = [
+  'commerce',
+  'config',
+  'node',
+  'reports',
+  'search',
+  'structure',
+  'user'
+];
+
 /**
  * The ElasticApm request event subscriber class.
  *
@@ -94,7 +104,8 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
-      $this->phpAgent = $this->apiService->getAgent();
+      // Let's pass some options to the Agent depending on the request.
+      $this->phpAgent = $this->apiService->getAgent($this->getRequestOptions());
     }
   }
 
@@ -261,6 +272,37 @@ class RequestSubscriber implements EventSubscriberInterface {
     ];
 
     return $span;
+  }
+
+  /**
+   * Add options to pass to the PHP Agents.
+   *
+   * @return array
+   *   An array of options to pass to the PHP Agent. Ie. tags.
+   */
+  protected function getRequestOptions() {
+    $options = [];
+
+    // Fetch the current path.
+    $route_object = $this->routeMatch->getRouteObject();
+    $path = $route_object->getPath();
+    $route_options = $route_object->getOptions();
+
+    // If this is an admin page, add a custom variable to denote that.
+    if (isset($route_options['_admin_route'])) {
+      $options['tags']['admin_page'] = TRUE;
+    }
+
+    // Add tags depending on the page we're in.
+    foreach (ELASTIC_APM_PARENT_ROUTES as $route) {
+      if (strpos($path, $route) === FALSE) {
+        continue;
+      }
+
+      $options['tags']['parent_route'] = $route;
+    }
+
+    return $options;
   }
 
 }

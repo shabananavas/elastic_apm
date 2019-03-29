@@ -21,10 +21,12 @@ interface ApiServiceInterface {
   /**
    * Returns an initialized Elastic APM PHP Agent.
    *
+   * @param array $options
+   *   An array of options to pass to the agent when initializing. Ie. tags.
    * @return \PhilKra\Agent
    *   The Elastic APM PHP agent.
    */
-  public function getAgent();
+  public function getAgent(array $options);
 
   /**
    * Returns TRUE if the user has enabled Elastic APM.

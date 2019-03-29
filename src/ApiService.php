@@ -54,16 +54,18 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAgent() {
+  public function getAgent(array $options = []) {
+    // Add the user info to the options.
+    $options['user'] = [
+      'id' => $this->account->id(),
+      'username' => $this->account->getAccountName(),
+      'email' => $this->account->getEmail(),
+    ];
+
     // Initialize and return our PHP Agent.
     return new Agent(
       $this->config,
-      [
-        'user' => [
-          'id' => $this->account->id(),
-          'email' => $this->account->getEmail(),
-        ],
-      ]
+      $options
     );
   }
 
