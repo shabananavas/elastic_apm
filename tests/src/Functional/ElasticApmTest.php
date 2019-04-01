@@ -53,14 +53,14 @@ class ElasticApmTest extends BrowserTestBase {
   public function testElasticApmConfiguration() {
     $session = $this->assertSession();
 
-    $this->drupalGet(Url::fromRoute('elastic_apm.configuration'));
+    $this->drupalGet(Url::fromRoute('elastic_apm.connection_settings'));
     $session->statusCodeEquals(200);
     // Test page contains some text.
     $session->pageTextContains('Elastic APM');
 
     // Fetch the current configuration and assert that it hasn't been set.
     $config_factory = $this->container->get('config.factory');
-    $config = $config_factory->get('elastic_apm.configuration');
+    $config = $config_factory->get('elastic_apm.connection_settings');
     $app_name = $config->get('appName');
     $server_url = $config->get('serverUrl');
     $secret_token = $config->get('secretToken');
@@ -76,7 +76,7 @@ class ElasticApmTest extends BrowserTestBase {
     $session->statusCodeEquals(200);
 
     // Now, ensure the new configs have been saved.
-    $config = $config_factory->get('elastic_apm.configuration');
+    $config = $config_factory->get('elastic_apm.connection_settings');
     $app_name = $config->get('appName');
     $server_url = $config->get('serverUrl');
     $secret_token = $config->get('secretToken');
@@ -108,7 +108,7 @@ class ElasticApmTest extends BrowserTestBase {
 
     // Now, let's save the Elastic APM configs, so the requests start
     // submitting.
-    $this->drupalGet(Url::fromRoute('elastic_apm.configuration'));
+    $this->drupalGet(Url::fromRoute('elastic_apm.connection_settings'));
     $this->submitForm([
       'app_name' => ELASTIC_APM_TEST_APP_NAME,
       'server_url' => ELASTIC_APM_TEST_SERVER_URL,
