@@ -14,9 +14,17 @@ interface ApiServiceInterface {
    * Returns the Elastic APM configuration array.
    *
    * @return array
-   *   An array of Elastic APM configs.
+   *   An array of Elastic APM configuration.
    */
   public function getConfig();
+
+  /**
+   * Returns the Elastic APM connection_settings array.
+   *
+   * @return array
+   *   An array of Elastic APM connection_settings.
+   */
+  public function getConnectionSettings();
 
   /**
    * Returns an initialized Elastic APM PHP Agent.
@@ -43,5 +51,13 @@ interface ApiServiceInterface {
    *   TRUE if the config object is configured.
    */
   public function isConfigured();
+
+  /**
+   * Returns TRUE if the current page is in the include pages list.
+   *
+   * @return bool
+   *   TRUE if the current page is in the include list.
+   */
+  public function capturePage();
 
 }

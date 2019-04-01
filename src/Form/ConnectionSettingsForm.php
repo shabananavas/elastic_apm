@@ -89,7 +89,10 @@ class ConnectionSettingsForm extends ConfigFormBase {
     $form['application']['apm_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('APM server intake API version'),
-      '#description' => $this->t('<strong>Currently only the \'v1\' intake API of the APM server is supported.</strong>'),
+      '#description' => $this->t(
+        '<strong>Currently only the \'v1\' intake API of the APM server
+        is supported.</strong>'
+      ),
       '#default_value' => $config->get('apmVersion'),
       '#required' => TRUE,
     ];
@@ -98,14 +101,20 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#type' => 'textarea',
       '#title' => $this->t('$_SERVER variables'),
       '#default_value' => !empty($config->get('env')) ? implode(PHP_EOL, $config->get('env')) : '',
-      '#description' => $this->t('$_SERVER variables to send to the APM server, empty set sends all. Keys are case sensitive. <strong>Enter one per line.</strong>'),
+      '#description' => $this->t(
+        '$_SERVER variables to send to the APM server, empty set sends
+        all. Keys are case sensitive. <strong>Enter one per line.</strong>'
+      ),
     ];
 
     $form['application']['cookies'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Cookies'),
       '#default_value' => !empty($config->get('cookies')) ? implode(PHP_EOL, $config->get('cookies')) : '',
-      '#description' => $this->t('Cookies to send to the APM server, empty set sends all. Keys are case sensitive. <strong>Enter one per line.</strong>'),
+      '#description' => $this->t(
+        'Cookies to send to the APM server, empty set sends all. Keys are
+        case sensitive. <strong>Enter one per line.</strong>'
+      ),
     ];
 
     $form['application']['http_client'] = [
@@ -125,17 +134,6 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('httpClient.proxy'),
     ];
 
-    $form['errors'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Error settings'),
-    ];
-
-    $form['errors']['capture_exceptions'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Capture errors and exceptions'),
-      '#default_value' => $config->get('captureExceptions'),
-    ];
-
     $form['active'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
@@ -151,7 +149,9 @@ class ConnectionSettingsForm extends ConfigFormBase {
 
     // Check if APM server URL is valid.
     if (!UrlHelper::isValid($form_state->getValue('server_url'), TRUE)) {
-      $form_state->setErrorByName('server_url', $this->t('The server URL is invalid.'));
+      $form_state->setErrorByName('server_url', $this->t(
+        'The server URL is invalid.'
+      ));
     }
   }
 
@@ -173,7 +173,6 @@ class ConnectionSettingsForm extends ConfigFormBase {
       ->set('apmVersion', $values['apm_version'])
       ->set('env', array_filter($environment_variables))
       ->set('cookies', array_filter($cookies))
-      ->set('captureExceptions', $values['capture_exceptions'])
       ->set('httpClient', [
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],

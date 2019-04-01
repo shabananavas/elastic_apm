@@ -123,6 +123,11 @@ class RequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    // Only process if the current page is in the include pages list.
+    if (!$this->apiService->capturePage()) {
+      return;
+    }
+
     // If this is a sub request, only process it if there was no master
     // request yet. In that case, it is probably a page not found or access
     // denied page.
@@ -163,6 +168,11 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Don't process if Elastic APM is not configured.
     if (!$this->apiService->isConfigured()) {
+      return;
+    }
+
+    // Only process if the current page is in the include pages list.
+    if (!$this->apiService->capturePage()) {
       return;
     }
 

@@ -5,3 +5,11 @@ elastic_apm.connection_settings:
     _title: 'Elastic APM'
   requirements:
     _permission: 'administer elastic apm'
+
+elastic_apm.configuration:
+  path: '/admin/config/development/elastic-apm/configuration'
+  defaults:
+    _form: '\Drupal\elastic_apm\Form\ConfigurationForm'
+    _title: 'Elastic APM Configuration'
+  requirements:
+    _permission: 'administer elastic apm'

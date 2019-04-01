@@ -14,6 +14,10 @@ services:
     arguments:
       - '@config.factory'
       - '@current_user'
+      - '@path.alias_manager'
+      - '@path.matcher'
+      - '@request_stack'
+      - '@path.current'
 
   elastic_apm.request_event_subscriber:
     class: Drupal\elastic_apm\EventSubscriber\RequestSubscriber

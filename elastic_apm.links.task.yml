@@ -2,3 +2,8 @@ elastic_apm.connection_settings:
   title: 'Connection Settings'
   route_name: 'elastic_apm.connection_settings'
   base_route: 'elastic_apm.connection_settings'
+
+elastic_apm.configuration:
+  title: 'Configuration'
+  route_name: 'elastic_apm.configuration'
+  base_route: 'elastic_apm.connection_settings'

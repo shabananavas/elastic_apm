@@ -1,0 +1,4 @@
+pages: ''
+negatePages: FALSE
+captureExceptions: TRUE
+sendUserDetails: TRUE
