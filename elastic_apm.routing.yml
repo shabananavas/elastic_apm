@@ -4,4 +4,4 @@ elastic_apm.configuration:
     _form: '\Drupal\elastic_apm\Form\ConfigurationForm'
     _title: 'Elastic APM'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer elastic apm'
