@@ -41,7 +41,7 @@ class ApiService implements ApiServiceInterface {
     ConfigFactoryInterface $configFactory,
     AccountProxyInterface $account
   ) {
-    $this->config = $configFactory->get('elastic_apm.configuration')->get();
+    $this->config = $configFactory->get('elastic_apm.connection_settings')->get();
     $this->account = $account;
   }
 
