@@ -6,35 +6,35 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Configuration form for the Elastic APM.
+ * Connection settings form for the Elastic APM.
  *
  * @package Drupal\elastic_apm\Form
  */
-class ConfigurationForm extends ConfigFormBase {
+class ConnectionSettingsForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'elastic_apm_configuration';
+    return 'elastic_apm_connection_settings';
   }
 
   /**
    * {@inheritdoc}
    */
   public function getEditableConfigNames() {
-    return ['elastic_apm.configuration'];
+    return ['elastic_apm.connection_settings'];
   }
 
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('elastic_apm.configuration');
+    $config = $this->config('elastic_apm.connection_settings');
 
     $form['connection'] = [
       '#type' => 'details',
-      '#title' => $this->t('Connection configuration'),
+      '#title' => $this->t('Connection settings'),
       '#open' => TRUE,
     ];
 
@@ -70,7 +70,7 @@ class ConfigurationForm extends ConfigFormBase {
 
     $form['application'] = [
       '#type' => 'details',
-      '#title' => $this->t('Application configuration'),
+      '#title' => $this->t('Application settings'),
     ];
 
     $form['application']['app_version'] = [
@@ -126,7 +126,7 @@ class ConfigurationForm extends ConfigFormBase {
 
     $form['errors'] = [
       '#type' => 'details',
-      '#title' => $this->t('Error configuration'),
+      '#title' => $this->t('Error settings'),
     ];
 
     $form['errors']['capture_exceptions'] = [
@@ -153,7 +153,7 @@ class ConfigurationForm extends ConfigFormBase {
     $environment_variables = preg_split("(\r\n?|\n)", $values['env']);
     $cookies = preg_split("(\r\n?|\n)", $values['cookies']);
 
-    $this->config('elastic_apm.configuration')
+    $this->config('elastic_apm.connection_settings')
       ->set('appName', $values['app_name'])
       ->set('appVersion', $values['app_version'])
       ->set('serverUrl', $values['server_url'])
