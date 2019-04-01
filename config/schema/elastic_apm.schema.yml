@@ -1,6 +1,6 @@
-elastic_apm.configuration:
+elastic_apm.connection_settings:
   type: config_object
-  label: 'Elastic APM Configuration'
+  label: 'Elastic APM Connection Settings'
   mapping:
     appName:
       type: label
