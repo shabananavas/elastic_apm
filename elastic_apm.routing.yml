@@ -1,4 +1,4 @@
-elastic_apm.configuration:
+elastic_apm.connection_settings:
   path: '/admin/config/development/elastic-apm'
   defaults:
     _form: '\Drupal\elastic_apm\Form\ConnectionSettingsForm'
