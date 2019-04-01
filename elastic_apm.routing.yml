@@ -1,7 +1,7 @@
 elastic_apm.configuration:
   path: '/admin/config/development/elastic-apm'
   defaults:
-    _form: '\Drupal\elastic_apm\Form\ConfigurationForm'
+    _form: '\Drupal\elastic_apm\Form\ConnectionSettingsForm'
     _title: 'Elastic APM'
   requirements:
     _permission: 'administer site configuration'
