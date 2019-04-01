@@ -154,21 +154,21 @@ class ConfigurationForm extends ConfigFormBase {
     $cookies = preg_split("(\r\n?|\n)", $values['cookies']);
 
     $this->config('elastic_apm.configuration')
-      ->set('appName', $form_state->getValue('app_name'))
-      ->set('appVersion', $form_state->getValue('app_version'))
-      ->set('serverUrl', $form_state->getValue('server_url'))
-      ->set('secretToken', $form_state->getValue('secret_token'))
-      ->set('hostname', $form_state->getValue('host_name'))
-      ->set('timeout', $form_state->getValue('timeout'))
-      ->set('apmVersion', $form_state->getValue('apm_version'))
+      ->set('appName', $values['app_name'])
+      ->set('appVersion', $values['app_version'])
+      ->set('serverUrl', $values['server_url'])
+      ->set('secretToken', $values['secret_token'])
+      ->set('hostname', $values['host_name'])
+      ->set('timeout', $values['timeout'])
+      ->set('apmVersion', $values['apm_version'])
       ->set('env', array_filter($environment_variables))
       ->set('cookies', array_filter($cookies))
-      ->set('captureExceptions', $form_state->getValue('capture_exceptions'))
+      ->set('captureExceptions', $values['capture_exceptions'])
       ->set('httpClient', [
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],
       ])
-      ->set('active', $form_state->getValue('active'))
+      ->set('active', $values['active'])
       ->save();
 
     parent::submitForm($form, $form_state);
