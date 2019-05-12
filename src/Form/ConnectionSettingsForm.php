@@ -135,10 +135,10 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('captureExceptions'),
     ];
 
-    $form['user_details'] = [
+    $form['send_user'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Send user details to elastic'),
-      '#default_value' => $config->get('active'),
+      '#default_value' => $config->get('send_user'),
       '#description' => $this->t('
         If checked user informations(id, uname, email) will be passed to elastic along with the
         request details.
@@ -179,6 +179,7 @@ class ConnectionSettingsForm extends ConfigFormBase {
         'proxy' => $values['proxy'],
       ])
       ->set('active', $values['active'])
+      ->set('send_user', $values['send_user'])
       ->save();
 
     parent::submitForm($form, $form_state);
