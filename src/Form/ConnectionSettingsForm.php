@@ -135,6 +135,16 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('captureExceptions'),
     ];
 
+    $form['user_details'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Send user details to elastic'),
+      '#default_value' => $config->get('active'),
+      '#description' => $this->t('
+        If checked user informations(id, uname, email) will be passed to elastic along with the
+        request details.
+      '),
+    ];
+
     $form['active'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
