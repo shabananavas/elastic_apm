@@ -64,14 +64,21 @@ class ApiService implements ApiServiceInterface {
    * {@inheritdoc}
    */
   public function getAgent() {
+    // Send user details only if its configured to do so.
+    $user = [];
+    if ($this->getConfig()['send_user']) {
+      $user = [
+        'id' => $this->account->id(),
+        'email' => $this->account->getEmail(),
+        'username' => $this->account->getAccountName(),
+      ];
+    }
+
     // Initialize and return our PHP Agent.
     return new Agent(
       $this->getConfig(),
       [
-        'user' => [
-          'id' => $this->account->id(),
-          'email' => $this->account->getEmail(),
-        ],
+        'user' => $user,
       ]
     );
   }
