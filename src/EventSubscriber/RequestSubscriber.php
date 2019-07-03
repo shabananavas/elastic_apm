@@ -132,7 +132,7 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Start a new transaction.
     try {
-      $transaction = $this->phpAgent->startTransaction();
+      $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
     }
     catch (Exception $e) {
       // Log the error to watchdog.
