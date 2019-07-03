@@ -132,10 +132,7 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Start a new transaction.
     try {
-      $transaction = $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
-
-      // Capture database time by wrapping spans around the db queries run.
-      $transaction->setSpans($this->constructDatabaseSpans());
+      $transaction = $this->phpAgent->startTransaction();
     }
     catch (Exception $e) {
       // Log the error to watchdog.
@@ -174,7 +171,11 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // End the transaction.
     try {
-      $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
+      $transaction = $this->phpAgent->getTransaction($this->routeMatch->getRouteName());
+      // Capture database time by wrapping spans around the db queries run.
+      $transaction->setSpans($this->constructDatabaseSpans());
+
+      $transaction->stop();
 
       // Send our transaction to Elastic.
       $this->phpAgent->send();
