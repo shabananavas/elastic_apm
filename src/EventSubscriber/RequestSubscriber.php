@@ -249,7 +249,7 @@ class RequestSubscriber implements EventSubscriberInterface {
         'abs_path' => $query['caller']['file'],
         'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
         'lineno' => $query['caller']['line'],
-        'vars' => $query['args'],
+        'vars' => (object) $query['args'],
       ],
     ];
 
