@@ -4,6 +4,7 @@ namespace Drupal\elastic_apm\EventSubscriber;
 
 use Drupal\elastic_apm\ApiServiceInterface;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -282,27 +283,57 @@ class RequestSubscriber implements EventSubscriberInterface {
    */
   protected function getRequestOptions() {
     $options = [];
+    $route_pattern = $this->apiService->getTagConfig()['route_pattern'];
+    $route_pattern = Yaml::decode($route_pattern);
 
     // Fetch the current path.
     $route_object = $this->routeMatch->getRouteObject();
     $path = $route_object->getPath();
     $route_options = $route_object->getOptions();
 
+    $route_name = $this->routeMatch->getRouteName();
     // If this is an admin page, add a custom variable to denote that.
     if (isset($route_options['_admin_route'])) {
       $options['tags']['admin_page'] = TRUE;
     }
-
     // Add tags depending on the page we're in.
-    foreach (ELASTIC_APM_PARENT_ROUTES as $route) {
-      if (strpos($path, $route) === FALSE) {
+    foreach ($route_pattern as $key => $tag) {
+      if (!($this->matchRoute($route_name, $key))) {
         continue;
       }
 
-      $options['tags']['parent_route'] = $route;
+      $options['tags']['parent_route'] = $tag;
     }
-
     return $options;
   }
+
+  /**
+   * Checks if a route matches any pattern in a set of patterns.
+   *
+   * @param string $route
+   *   The route to match.
+   * @param string $pattern
+   *   The pattern string.
+   *
+   * @return bool
+   *   TRUE if the route matches the pattern, FALSE otherwise.
+   */
+  protected function matchRoute($route, $pattern) {
+    if (!isset($this->regexes[$pattern])) {
+      // Convert path settings to a regular expression.
+      $to_replace = [
+        // Quote asterisks.
+        '/\\\\\*/',
+      ];
+      $replacements = [
+        '.*',
+      ];
+      $patterns_quoted = preg_quote($pattern, '/');
+      $this->regexes[$pattern] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')$/';
+
+    }
+    return (bool) preg_match($this->regexes[$pattern], $route);
+  }
+
 
 }
