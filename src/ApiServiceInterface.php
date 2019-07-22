@@ -11,6 +11,14 @@ namespace Drupal\elastic_apm;
 interface ApiServiceInterface {
 
   /**
+   * Returns the Elastic APM tag configuration array.
+   *
+   * @return array
+   *   An array of Elastic APM tag configs.
+   */
+  public function getTagConfig();
+
+  /**
    * Returns the Elastic APM configuration array.
    *
    * @return array

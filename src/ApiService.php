@@ -42,6 +42,7 @@ class ApiService implements ApiServiceInterface {
     AccountProxyInterface $account
   ) {
     $this->config = $configFactory->get('elastic_apm.connection_settings')->get();
+    $this->tagConfig = $configFactory->get('elastic_apm.tags')->get();
     $this->account = $account;
   }
 
@@ -58,6 +59,13 @@ class ApiService implements ApiServiceInterface {
     ];
 
     return $config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTagConfig() {
+    return $this->tagConfig;
   }
 
   /**
