@@ -322,7 +322,7 @@ class RequestSubscriber implements EventSubscriberInterface {
     // Add tags depending on the path pattern set.
     // Path patterns take priority over route pattern.
     foreach ($path_pattern as $key => $tag) {
-      if (!($this->pathMatcher->matchPath($route_name, $key))) {
+      if (!($this->pathMatcher->matchPath($path, $key))) {
         continue;
       }
 
