@@ -7,7 +7,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Tag settings for Elastic APM.
+ * Tag settings form for Elastic APM.
  *
  * @package Drupal\elastic_apm\Form
  */
@@ -70,8 +70,6 @@ class TagSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $environment_variables = preg_split("(\r\n?|\n)", $values['env']);
-    $cookies = preg_split("(\r\n?|\n)", $values['cookies']);
 
     $this->config('elastic_apm.tags')
       ->set('route_pattern', $values['route_pattern_tags'])
