@@ -63,7 +63,7 @@ class TagSettingsForm extends ConfigFormBase {
     $form['path_pattern']['path_pattern_tags'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Route Pattern Tags'),
-      '#default_value' => $config->get('route_pattern'),
+      '#default_value' => $config->get('path_pattern'),
       '#description' => $this->t('
         Configure which tags to send for which pages.
         Please add path tag settings in YML format with path pattern as key
