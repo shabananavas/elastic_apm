@@ -22,7 +22,7 @@ services:
       - '@current_route_match'
       - '@logger.channel.elastic_apm'
       - '@messenger'
-      - 'path.matcher'
+      - '@path.matcher'
     tags:
       - {name: event_subscriber}
 
