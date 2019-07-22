@@ -7,6 +7,7 @@ use Drupal\elastic_apm\ApiServiceInterface;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Messenger\MessengerInterface;
+use \Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Utility\Error;
@@ -81,6 +82,11 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected $processedMasterRequest = FALSE;
 
   /**
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  private $pathMatcher;
+
+  /**
    * Constructs a RequestSubscriber object.
    *
    * @param \Drupal\elastic_apm\ApiServiceInterface $api_service
@@ -91,17 +97,21 @@ class RequestSubscriber implements EventSubscriberInterface {
    *   The logger service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger.
+   * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
+   *   The path matcher.
    */
   public function __construct(
     ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
     LoggerInterface $logger,
     MessengerInterface $messenger
+    PathMatcherInterface $pathMatcher
   ) {
     $this->apiService = $api_service;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
     $this->messenger = $messenger;
+    $this->pathMatcher = $pathMatcher;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
@@ -283,8 +293,10 @@ class RequestSubscriber implements EventSubscriberInterface {
    */
   protected function getRequestOptions() {
     $options = [];
-    $route_pattern = $this->apiService->getTagConfig()['route_pattern'];
-    $route_pattern = Yaml::decode($route_pattern);
+
+    $tag_config = $this->apiService->getTagConfig();
+    $route_pattern = Yaml::decode($tag_config['route_pattern']);
+    $path_pattern = Yaml::decode($tag_config['path_pattern']);
 
     // Fetch the current path.
     $route_object = $this->routeMatch->getRouteObject();
@@ -292,11 +304,13 @@ class RequestSubscriber implements EventSubscriberInterface {
     $route_options = $route_object->getOptions();
 
     $route_name = $this->routeMatch->getRouteName();
+
     // If this is an admin page, add a custom variable to denote that.
     if (isset($route_options['_admin_route'])) {
       $options['tags']['admin_page'] = TRUE;
     }
-    // Add tags depending on the page we're in.
+
+    // Add tags depending on the route pattern set.
     foreach ($route_pattern as $key => $tag) {
       if (!($this->matchRoute($route_name, $key))) {
         continue;
@@ -304,6 +318,17 @@ class RequestSubscriber implements EventSubscriberInterface {
 
       $options['tags']['parent_route'] = $tag;
     }
+
+    // Add tags depending on the path pattern set.
+    // Path patterns take priority over route pattern.
+    foreach ($path_pattern as $key => $tag) {
+      if (!($this->pathMatcher->matchPath($route_name, $key))) {
+        continue;
+      }
+
+      $options['tags']['parent_route'] = $tag;
+    }
+
     return $options;
   }
 

@@ -55,6 +55,29 @@ class TagSettingsForm extends ConfigFormBase {
       '),
     ];
 
+    $form['path_pattern'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Path pattern settings'),
+      '#open' => TRUE,
+    ];
+    $form['path_pattern']['path_pattern_tags'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Route Pattern Tags'),
+      '#default_value' => $config->get('route_pattern'),
+      '#description' => $this->t('
+        Configure which tags to send for which pages.
+        Please add path tag settings in YML format with path pattern as key
+        and tag as value. The "*" character is a wildcard. An example path
+        is  /product/* for every product page.
+        Example:
+        <pre>
+        /product/*: commerce
+        /checkout/*: commerce
+        /user/*: user
+        </pre>
+      '),
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -73,6 +96,7 @@ class TagSettingsForm extends ConfigFormBase {
 
     $this->config('elastic_apm.tags')
       ->set('route_pattern', $values['route_pattern_tags'])
+      ->set('path_pattern', $values['path_pattern_tags'])
       ->save();
 
     parent::submitForm($form, $form_state);
