@@ -104,7 +104,7 @@ class RequestSubscriber implements EventSubscriberInterface {
     ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
     LoggerInterface $logger,
-    MessengerInterface $messenger
+    MessengerInterface $messenger,
     PathMatcherInterface $pathMatcher
   ) {
     $this->apiService = $api_service;
