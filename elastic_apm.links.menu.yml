@@ -1,0 +1,5 @@
+elastic_apm.connection_settings:
+  title: 'Elastic APM'
+  route_name: 'elastic_apm.connection_settings'
+  parent: 'system.admin_config_development'
+  description: 'Administer Elastic APM connection settings and configuration.'
