@@ -134,7 +134,7 @@ class RequestSubscriber implements EventSubscriberInterface {
         sprintf(
           'An error occurred while trying to start a transaction for the Elastic
            APM server. The error was: "%s".',
-          $e->getMessage(),
+          $e->getMessage()
         )
       );
     }
@@ -179,7 +179,7 @@ class RequestSubscriber implements EventSubscriberInterface {
         sprintf(
           'An error occurred while stopping and sending the transaction to the
            Elastic APM server. The error was: "%s".',
-          $e->getMessage(),
+          $e->getMessage()
         )
       );
     }
