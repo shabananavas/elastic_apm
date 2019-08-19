@@ -149,7 +149,7 @@ class RequestSubscriber implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
    *   The event to process.
    */
-  public function onFinishRequest(PostResponseEvent $event) {
+  public function onKernelTerminate(PostResponseEvent $event) {
     // Return if Elastic isn't enabled.
     if (!$this->apiService->isEnabled()) {
       return;
