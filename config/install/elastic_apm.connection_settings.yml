@@ -10,5 +10,5 @@ cookies: []
 httpClient:
   verify: FALSE
   proxy: ''
-captureExceptions: FALSE
+captureThrowable: FALSE
 active: FALSE

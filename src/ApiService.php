@@ -47,6 +47,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function captureThrowable() {
+    return $this->config['captureThrowable'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getAgent() {
     // Initialize and return our PHP Agent.
     return new Agent(

@@ -129,10 +129,10 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Error settings'),
     ];
 
-    $form['errors']['capture_exceptions'] = [
+    $form['errors']['capture_throwable'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Capture errors and exceptions'),
-      '#default_value' => $config->get('captureExceptions'),
+      '#default_value' => $config->get('captureThrowable'),
     ];
 
     $form['active'] = [
@@ -163,7 +163,7 @@ class ConnectionSettingsForm extends ConfigFormBase {
       ->set('apmVersion', $values['apm_version'])
       ->set('env', array_filter($environment_variables))
       ->set('cookies', array_filter($cookies))
-      ->set('captureExceptions', $values['capture_exceptions'])
+      ->set('captureThrowable', $values['capture_throwable'])
       ->set('httpClient', [
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],

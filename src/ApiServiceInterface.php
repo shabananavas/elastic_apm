@@ -11,6 +11,14 @@ namespace Drupal\elastic_apm;
 interface ApiServiceInterface {
 
   /**
+   * Returns whether Elastic APM is configured to capture errors and exceptions.
+   *
+   * @return array
+   *   TRUE if errors and exceptions should be captured, FALSE otherwise.
+   */
+  public function captureThrowable();
+
+  /**
    * Returns an initialized Elastic APM PHP Agent.
    *
    * @return \PhilKra\Agent

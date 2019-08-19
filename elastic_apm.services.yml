@@ -24,3 +24,10 @@ services:
       - '@messenger'
     tags:
       - {name: event_subscriber}
+
+  elastic_apm.exception_subscriber:
+    class: Drupal\elastic_apm\EventSubscriber\ExceptionSubscriber
+    arguments:
+      - '@elastic_apm.api_service'
+    tags:
+      - {name: event_subscriber}
