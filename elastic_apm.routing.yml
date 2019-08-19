@@ -4,4 +4,4 @@ elastic_apm.connection_settings:
     _form: '\Drupal\elastic_apm\Form\ConnectionSettingsForm'
     _title: 'Elastic APM'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer elastic_apm'
