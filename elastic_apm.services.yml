@@ -21,7 +21,6 @@ services:
       - '@elastic_apm.api_service'
       - '@current_route_match'
       - '@logger.channel.elastic_apm'
-      - '@messenger'
     tags:
       - {name: event_subscriber}
 
