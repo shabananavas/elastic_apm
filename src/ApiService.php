@@ -62,6 +62,7 @@ class ApiService implements ApiServiceInterface {
         'user' => [
           'id' => $this->account->id(),
           'email' => $this->account->getEmail(),
+          'username' => $this->account->getAccountName(),
         ],
       ]
     );
