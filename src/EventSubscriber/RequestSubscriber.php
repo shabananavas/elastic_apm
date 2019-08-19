@@ -11,7 +11,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -91,7 +91,7 @@ class RequestSubscriber implements EventSubscriberInterface {
   public static function getSubscribedEvents() {
     return [
       KernelEvents::REQUEST => ['onRequest', 30],
-      KernelEvents::FINISH_REQUEST => ['onFinishRequest', 300],
+      KernelEvents::TERMINATE => ['onKernelTerminate', 300],
     ];
   }
 
@@ -146,10 +146,10 @@ class RequestSubscriber implements EventSubscriberInterface {
   /**
    * End the transaction and send to PHP Agent whenever this event is triggered.
    *
-   * @param \Symfony\Component\HttpKernel\Event\FinishRequestEvent $event
+   * @param \Symfony\Component\HttpKernel\Event\PostResponseEvent $event
    *   The event to process.
    */
-  public function onFinishRequest(FinishRequestEvent $event) {
+  public function onFinishRequest(PostResponseEvent $event) {
     // Return if Elastic isn't enabled.
     if (!$this->apiService->isEnabled()) {
       return;
