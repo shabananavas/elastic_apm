@@ -4,6 +4,7 @@ namespace Drupal\elastic_apm\EventSubscriber;
 
 use Drupal\elastic_apm\ApiServiceInterface;
 
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -54,6 +55,13 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected $phpAgent;
 
   /**
+   * The system time service.
+   *
+   * @var \Drupal\Component\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
    * A flag whether the master request was processed.
    *
    * @var bool
@@ -69,15 +77,19 @@ class RequestSubscriber implements EventSubscriberInterface {
    *   The current route.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The system time service.
    */
   public function __construct(
     ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
-    LoggerInterface $logger
+    LoggerInterface $logger,
+    TimeInterface $time
   ) {
     $this->apiService = $api_service;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
+    $this->time = $time;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
@@ -195,10 +207,11 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected function constructDatabaseSpans() {
     $spans = [];
 
-    foreach (array_keys(Database::getAllConnectionInfo()) as $key) {
+    foreach (Database::getAllConnectionInfo() as $key => $connection) {
+      $driver = current($connection)['driver'];
       $database_log = Database::startLog('elastic_apm', $key);
       foreach ($database_log->get('elastic_apm') as $query) {
-        $spans[] = $this->constructQuerySpan($key, $query);
+        $spans[] = $this->constructQuerySpan($key, $driver, $query);
       }
     }
 
@@ -210,22 +223,25 @@ class RequestSubscriber implements EventSubscriberInterface {
    *
    * @param string $connection
    *   The database connection name.
+   * @param string $driver
+   *   The database connection driver name.
    * @param array $query
    *   An array of information about the query that was run.
    *
    * @return array
    *   An array of necessary information about the query to send to Elastic.
    */
-  protected function constructQuerySpan($connection, array $query) {
+  protected function constructQuerySpan($connection, $driver, array $query) {
     $span = [];
 
+    $start = $this->time->getCurrentMicroTime() - $this->time->getRequestMicroTime();
+
     // Add the necessary schema info for the APM server.
-    $span['name'] = $query['caller']['function'];
-    $span['type'] = 'db.mysql.query';
-    // This is the query start time relative to the transaction start.
-    $span['start'] = 0;
-    // Change duration time of query to milliseconds.
-    $span['duration'] = $query['time'] * 1000;
+    $span['name'] = $query['caller']['class'] . '::' . $query['caller']['function'];
+    $span['type'] = 'db.' . $driver . '.query';
+    // Start time relative to the transaction start in milliseconds.
+    $span['start'] = $start * 1000;
+    $span['duration'] = $query['time'];
     $span['context'] = [
       'db' => [
         'instance' => $connection,
