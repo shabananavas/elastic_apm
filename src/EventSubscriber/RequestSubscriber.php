@@ -81,7 +81,8 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
-      $this->phpAgent = $this->apiService->getAgent();
+      // Let's pass some options to the Agent depending on the request.
+      $this->phpAgent = $this->apiService->getAgent($this->prepareAgentOptions());
     }
   }
 
@@ -243,6 +244,23 @@ class RequestSubscriber implements EventSubscriberInterface {
     ];
 
     return $span;
+  }
+
+  /**
+   * Add options to pass to the PHP Agents.
+   *
+   * Currently we are just tagging admin pages.
+   *
+   * @return array
+   *   An array of options to pass to the PHP Agent. Ie. tags.
+   */
+  protected function prepareAgentOptions() {
+    $route_options = $this->routeMatch->getRouteObject()->getOptions();
+    if (isset($route_options['_admin_route'])) {
+      return ['tags' => ['is_admin_route' => TRUE]];
+    }
+
+    return [];
   }
 
 }
