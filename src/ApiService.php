@@ -2,6 +2,7 @@
 
 namespace Drupal\elastic_apm;
 
+use Drupal;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 
@@ -40,8 +41,13 @@ class ApiService implements ApiServiceInterface {
     ConfigFactoryInterface $configFactory,
     AccountProxyInterface $account
   ) {
-    $this->config = $configFactory->get('elastic_apm.connection_settings')->get();
     $this->account = $account;
+
+    $this->config = $configFactory->get('elastic_apm.connection_settings')->get();
+    $this->config += [
+      'framework' => 'Drupal',
+      'frameworkVersion' => Drupal::VERSION,
+    ];
   }
 
   /**
