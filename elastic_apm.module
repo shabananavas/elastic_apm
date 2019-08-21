@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * @file
+ * Provides hooks and functionality for the Elastic APM module.
+ */
+
+/**
+ * Implements hook_page_attachments.
+ *
+ * Adds the javascript file required for Real User Monitoring. Currently
+ * included in all pages; that will change once including/excluding pages from
+ * monitoring is implemented.
+ */
+function elastic_apm_page_attachments(array &$page) {
+  $page['#attached']['library'][] = 'elastic_apm/rum';
+}
