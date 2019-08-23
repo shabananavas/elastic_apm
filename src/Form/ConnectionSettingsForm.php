@@ -88,7 +88,7 @@ class ConnectionSettingsForm extends ConfigFormBase {
     $form['application']['apm_version'] = [
       '#type' => 'textfield',
       '#title' => $this->t('APM server intake API version'),
-      '#description' => $this->t('<strong>Currently only the \'v1\' intake API of the APM server is supported.</strong>'),
+      '#description' => $this->t('<strong>Currently only the "v1" intake API of the APM server is supported.</strong>'),
       '#default_value' => $config->get('phpAgent.apmVersion'),
       '#required' => TRUE,
     ];
