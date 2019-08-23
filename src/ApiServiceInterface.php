@@ -27,7 +27,7 @@ interface ApiServiceInterface {
    * @return \PhilKra\Agent
    *   The Elastic APM PHP agent.
    */
-  public function getAgent(array $options);
+  public function getPhpAgent(array $options);
 
   /**
    * Returns TRUE if the user has enabled Elastic APM.

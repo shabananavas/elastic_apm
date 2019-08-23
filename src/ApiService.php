@@ -40,7 +40,7 @@ class ApiService implements ApiServiceInterface {
     ConfigFactoryInterface $configFactory,
     AccountProxyInterface $account
   ) {
-    $this->config = $configFactory->get('elastic_apm.connection_settings')->get();
+    $this->config = $configFactory->get('elastic_apm.settings')->get();
     $this->account = $account;
   }
 
@@ -48,13 +48,13 @@ class ApiService implements ApiServiceInterface {
    * {@inheritdoc}
    */
   public function captureThrowable() {
-    return $this->config['captureThrowable'];
+    return $this->config['phpAgent']['captureThrowable'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getAgent(array $options = []) {
+  public function getPhpAgent(array $options = []) {
     // Add the user info to the options.
     $options['user'] = [
       'id' => $this->account->id(),
@@ -64,7 +64,7 @@ class ApiService implements ApiServiceInterface {
 
     // Initialize and return our PHP Agent.
     return new Agent(
-      $this->config,
+      $this->config['phpAgent'],
       $options
     );
   }
@@ -73,7 +73,7 @@ class ApiService implements ApiServiceInterface {
    * {@inheritdoc}
    */
   public function isEnabled() {
-    return $this->config['active'];
+    return $this->config['phpAgent']['active'];
   }
 
   /**
@@ -89,7 +89,7 @@ class ApiService implements ApiServiceInterface {
       'apmVersion',
     ];
     foreach ($required_settings as $key) {
-      if (empty($this->config[$key])) {
+      if (empty($this->config['phpAgent'][$key])) {
         $is_configured = FALSE;
         break;
       }

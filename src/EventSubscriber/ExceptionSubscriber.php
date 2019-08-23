@@ -47,7 +47,7 @@ class ExceptionSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    $this->phpAgent = $this->apiService->getAgent();
+    $this->phpAgent = $this->apiService->getPhpAgent();
   }
 
   /**
