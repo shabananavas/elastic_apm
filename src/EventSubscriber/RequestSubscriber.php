@@ -94,7 +94,7 @@ class RequestSubscriber implements EventSubscriberInterface {
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
       // Let's pass some options to the Agent depending on the request.
-      $this->phpAgent = $this->apiService->getAgent($this->prepareAgentOptions());
+      $this->phpAgent = $this->apiService->getPhpAgent($this->prepareAgentOptions());
     }
   }
 
