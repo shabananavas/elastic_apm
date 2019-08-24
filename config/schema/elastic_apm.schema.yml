@@ -49,3 +49,19 @@ elastic_apm.settings:
       active:
         type: boolean
         label: 'Enabled'
+  rumAgent:
+    type: mapping
+    label: 'Real User Monitoring Settings'
+    mapping:
+      serviceName:
+        type: label
+        label: 'Service name'
+      serviceVersion:
+        type: label
+        label: 'Service Version'
+      serverUrl:
+        type: label
+        label: 'Service URL'
+      status:
+        type: label
+        label: 'Status'

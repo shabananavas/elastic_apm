@@ -6,4 +6,9 @@ rum:
     name: MIT
     gpl-compatible: true
   js:
-    https://unpkg.com/@elastic/apm-rum@4.4.2/dist/bundles/elastic-apm-rum.umd.min.js: { type: external}
+    https://unpkg.com/@elastic/apm-rum@4.4.2/dist/bundles/elastic-apm-rum.umd.min.js:
+      type: external,
+      attributes:
+        crossorigin: true
+
+
