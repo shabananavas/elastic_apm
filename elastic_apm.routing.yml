@@ -1,7 +1,7 @@
-elastic_apm.connection_settings:
+elastic_apm.php_agent_settings:
   path: '/admin/config/development/elastic-apm'
   defaults:
-    _form: '\Drupal\elastic_apm\Form\ConnectionSettingsForm'
-    _title: 'Elastic APM'
+    _form: '\Drupal\elastic_apm\Form\PhpAgentSettingsForm'
+    _title: 'Elastic APM PHP Agent Settings'
   requirements:
     _permission: 'administer elastic_apm'
