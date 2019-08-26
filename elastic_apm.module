@@ -13,5 +13,10 @@
  * monitoring is implemented.
  */
 function elastic_apm_page_attachments(array &$page) {
+  if (!(\Drupal::service('elastic_apm.api_service')->isRumAgentEnabled())) {
+    return;
+  }
+
   $page['#attached']['library'][] = 'elastic_apm/rum';
 }
+

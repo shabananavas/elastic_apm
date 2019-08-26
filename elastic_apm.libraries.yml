@@ -2,6 +2,7 @@
 rum:
   remote: https://unpkg.com/@elastic/apm-rum@4.4.2/dist/bundles/elastic-apm-rum.umd.min.js
   version: 4.4.2
+  header: true
   license:
     name: MIT
     gpl-compatible: true

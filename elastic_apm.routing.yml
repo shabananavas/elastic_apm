@@ -5,3 +5,10 @@ elastic_apm.php_agent_settings:
     _title: 'Elastic APM PHP Agent Settings'
   requirements:
     _permission: 'administer elastic_apm'
+elastic_apm.rum_agent_settings:
+  path: '/admin/config/development/elastic-apm/rum'
+  defaults:
+    _form: '\Drupal\elastic_apm\Form\RumAgentSettingsForm'
+    _title: 'Elastic APM Real user Monitoring Settings'
+  requirements:
+    _permission: 'administer elastic_apm'

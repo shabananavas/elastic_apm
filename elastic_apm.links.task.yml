@@ -2,3 +2,7 @@ elastic_apm.php_agent_settings:
   title: 'PHP Agent Settings'
   route_name: 'elastic_apm.php_agent_settings'
   base_route: 'elastic_apm.php_agent_settings'
+elastic_apm.rum_agent_settings:
+  title: 'Real User Monitoring Settings'
+  route_name: 'elastic_apm.rum_agent_settings'
+  base_route: 'elastic_apm.php_agent_settings'

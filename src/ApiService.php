@@ -85,6 +85,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function isRumAgentEnabled() {
+    return $this->config['rumAgent']['status'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPhpAgentConfigured() {
     $is_configured = TRUE;
 
