@@ -92,7 +92,7 @@ class RequestSubscriber implements EventSubscriberInterface {
     $this->time = $time;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
-    if ($this->apiService->isEnabled() && $this->apiService->isConfigured()) {
+    if ($this->apiService->isPhpAgentEnabled() && $this->apiService->isPhpAgentConfigured()) {
       // Let's pass some options to the Agent depending on the request.
       $this->phpAgent = $this->apiService->getPhpAgent($this->prepareAgentOptions());
     }
@@ -116,12 +116,12 @@ class RequestSubscriber implements EventSubscriberInterface {
    */
   public function onRequest(GetResponseEvent $event) {
     // Return if Elastic isn't enabled.
-    if (!$this->apiService->isEnabled()) {
+    if (!$this->apiService->isPhpAgentEnabled()) {
       return;
     }
 
     // Don't process if Elastic APM is not configured.
-    if (!$this->apiService->isConfigured()) {
+    if (!$this->apiService->isPhpAgentConfigured()) {
       return;
     }
 
@@ -164,12 +164,12 @@ class RequestSubscriber implements EventSubscriberInterface {
    */
   public function onKernelTerminate(PostResponseEvent $event) {
     // Return if Elastic isn't enabled.
-    if (!$this->apiService->isEnabled()) {
+    if (!$this->apiService->isPhpAgentEnabled()) {
       return;
     }
 
     // Don't process if Elastic APM is not configured.
-    if (!$this->apiService->isConfigured()) {
+    if (!$this->apiService->isPhpAgentConfigured()) {
       return;
     }
 

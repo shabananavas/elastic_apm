@@ -3,7 +3,7 @@ elastic_apm.settings:
   label: 'Elastic APM Settings'
   phpAgent:
     type: mapping
-    label: 'PHP Agent Connection Settings'
+    label: 'PHP Agent Settings'
     mapping:
       appName:
         type: label
@@ -46,7 +46,7 @@ elastic_apm.settings:
       captureThrowable:
         type: boolean
         label: 'Capture errors and exceptions'
-      active:
+      status:
         type: boolean
         label: 'Enabled'
   rumAgent:

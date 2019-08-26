@@ -78,14 +78,14 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function isEnabled() {
-    return $this->config['phpAgent']['active'];
+  public function isPhpAgentEnabled() {
+    return $this->config['phpAgent']['status'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isConfigured() {
+  public function isPhpAgentConfigured() {
     $is_configured = TRUE;
 
     $required_settings = [

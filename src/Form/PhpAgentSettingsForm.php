@@ -6,17 +6,17 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Connection settings form for the Elastic APM.
+ * PHP Agent settings form for the Elastic APM.
  *
  * @package Drupal\elastic_apm\Form
  */
-class ConnectionSettingsForm extends ConfigFormBase {
+class PhpAgentSettingsForm extends ConfigFormBase {
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'elastic_apm_connection_settings';
+    return 'elastic_apm_php_agent_settings';
   }
 
   /**
@@ -135,11 +135,11 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('phpAgent.captureThrowable'),
     ];
 
-    $form['active'] = [
+    $form['status'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
-      '#default_value' => $config->get('phpAgent.active'),
-      '#description' => $this->t('Activate the APM agent'),
+      '#default_value' => $config->get('phpAgent.status'),
+      '#description' => $this->t('Activate the PHP APM agent'),
     ];
 
     return parent::buildForm($form, $form_state);
@@ -168,7 +168,7 @@ class ConnectionSettingsForm extends ConfigFormBase {
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],
       ])
-      ->set('phpAgent.active', $values['active'])
+      ->set('phpAgent.status', $values['status'])
       ->save();
 
     parent::submitForm($form, $form_state);
