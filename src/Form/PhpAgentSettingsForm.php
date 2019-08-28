@@ -135,6 +135,16 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('phpAgent.captureThrowable'),
     ];
 
+    $form['privacy'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Privacy settings'),
+    ];
+    $form['privacy']['send_user'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Send user details'),
+      '#default_value' => $config->get('phpAgent.privacy.send_user'),
+    ];
+
     $form['status'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enabled'),
@@ -167,6 +177,9 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       ->set('phpAgent.httpClient', [
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],
+      ])
+      ->set('phpAgent.privacy', [
+        'send_user' => $values['send_user'],
       ])
       ->set('phpAgent.status', $values['status'])
       ->save();
