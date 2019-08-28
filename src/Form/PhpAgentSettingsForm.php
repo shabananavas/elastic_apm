@@ -153,6 +153,14 @@ class PhpAgentSettingsForm extends ConfigFormBase {
     $environment_variables = preg_split("(\r\n?|\n)", $values['env']);
     $cookies = preg_split("(\r\n?|\n)", $values['cookies']);
 
+    // The timeout field in the connection settings is saving an empty string if
+    // no value is provided. That causes Guzzle to report an error as it is
+    // expecting an integer value, when there is a value. A NULL value should be
+    // saved when no value is provided.
+    if (!($values['timeout'])) {
+      $values['timeout'] = NULL;
+    }
+
     $this->config('elastic_apm.settings')
       ->set('phpAgent.appName', $values['app_name'])
       ->set('phpAgent.appVersion', $values['app_version'])
