@@ -13,10 +13,22 @@
  * monitoring is implemented.
  */
 function elastic_apm_page_attachments(array &$page) {
-  if (!(\Drupal::service('elastic_apm.api_service')->isRumAgentEnabled())) {
+  $api_service = \Drupal::service('elastic_apm.api_service');
+
+  // Do not proceed if Real user monitoring is not enabled.
+  if (!($api_service->isRumAgentEnabled())) {
     return;
   }
 
   $page['#attached']['library'][] = 'elastic_apm/rum';
+  $page['#attached']['html_head'][] = [
+    [
+      '#type' => 'html_tag',
+      '#tag' => 'script',
+      '#value' => $api_service->getRumAgentScript(),
+      '#weight' => -100,
+    ],
+    'elastic-apm-rum',
+  ];
 }
 

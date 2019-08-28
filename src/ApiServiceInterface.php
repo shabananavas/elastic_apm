@@ -29,6 +29,14 @@ interface ApiServiceInterface {
   public function getPhpAgent(array $options);
 
   /**
+   * Returns an initialized Elastic APM RUM Agent script.
+   *
+   * @return string
+   *   The Elastic APM RUM agent script.
+   */
+  public function getRumAgentScript();
+
+  /**
    * Returns TRUE if the user has enabled Elastic APM PHP Agent.
    *
    * @return bool

@@ -78,6 +78,18 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRumAgentScript(array $options = []) {
+    // Initialize and return RUM Agent script.
+    return 'elasticApm.init({
+      serviceName: ' . $this->config['rumAgent']['serviceName'] . ',
+      serverUrl: '. $this->config['rumAgent']['serverUrl'] . ',
+      serviceVersion: ' . $this->config['rumAgent']['serviceVersion'] . ',
+    })';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPhpAgentEnabled() {
     return $this->config['phpAgent']['status'];
   }
