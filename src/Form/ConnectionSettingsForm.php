@@ -85,14 +85,6 @@ class ConnectionSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('timeout'),
     ];
 
-    $form['application']['apm_version'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('APM server intake API version'),
-      '#description' => $this->t('<strong>Currently only the \'v1\' intake API of the APM server is supported.</strong>'),
-      '#default_value' => $config->get('apmVersion'),
-      '#required' => TRUE,
-    ];
-
     $form['application']['env'] = [
       '#type' => 'textarea',
       '#title' => $this->t('$_SERVER variables'),
@@ -160,7 +152,6 @@ class ConnectionSettingsForm extends ConfigFormBase {
       ->set('secretToken', $values['secret_token'])
       ->set('hostname', $values['host_name'])
       ->set('timeout', $values['timeout'])
-      ->set('apmVersion', $values['apm_version'])
       ->set('env', array_filter($environment_variables))
       ->set('cookies', array_filter($cookies))
       ->set('captureThrowable', $values['capture_throwable'])
