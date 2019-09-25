@@ -85,14 +85,6 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('phpAgent.timeout'),
     ];
 
-    $form['application']['apm_version'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('APM server intake API version'),
-      '#description' => $this->t('<strong>Currently only the "v1" intake API of the APM server is supported.</strong>'),
-      '#default_value' => $config->get('phpAgent.apmVersion'),
-      '#required' => TRUE,
-    ];
-
     $form['application']['env'] = [
       '#type' => 'textarea',
       '#title' => $this->t('$_SERVER variables'),
@@ -160,7 +152,6 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       ->set('phpAgent.secretToken', $values['secret_token'])
       ->set('phpAgent.hostname', $values['host_name'])
       ->set('phpAgent.timeout', $values['timeout'])
-      ->set('phpAgent.apmVersion', $values['apm_version'])
       ->set('phpAgent.env', array_filter($environment_variables))
       ->set('phpAgent.cookies', array_filter($cookies))
       ->set('phpAgent.captureThrowable', $values['capture_throwable'])
