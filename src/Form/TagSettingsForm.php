@@ -39,7 +39,7 @@ class TagSettingsForm extends ConfigFormBase {
     ];
     $form['path_pattern']['path_pattern_tags'] = [
       '#type' => 'textarea',
-      '#title' => $this->t('Route Pattern Tags'),
+      '#title' => $this->t('Path Pattern Tags'),
       '#default_value' => $config->get('path_pattern'),
       '#description' => $this->t('
         Configure which tags to send for which pages. Please use : to separate
@@ -47,8 +47,8 @@ class TagSettingsForm extends ConfigFormBase {
         The "*" character is a wildcard. Enter one path per line
         Example:
         <pre>
-        /product/*: provider|commerce
-        /checkout/*: provider|commerce
+          /product/*: provider|commerce
+          /checkout/*: provider|commerce
         </pre>
       '),
     ];
