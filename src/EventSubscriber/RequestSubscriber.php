@@ -70,7 +70,9 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected $processedMasterRequest = FALSE;
 
   /**
-    @var \Drupal\Core\Path\PathMatcherInterface
+   * The path matcher.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
    */
   private $pathMatcher;
 
@@ -303,7 +305,7 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected function preparePathPatternTags() {
     $tags = [];
 
-    // Fetech the current path from route object.
+    // Fetch the current path from route object.
     $route_object = $this->routeMatch->getRouteObject();
     $path = $route_object->getPath();
 
