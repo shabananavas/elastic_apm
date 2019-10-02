@@ -49,3 +49,10 @@ elastic_apm.settings:
       status:
         type: boolean
         label: 'Enabled'
+  tags:
+    type: mapping
+    label: 'Elastic APM Tags'
+    mapping:
+      path_pattern:
+        type: string
+        label: 'Path pattern tags'
