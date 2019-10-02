@@ -43,13 +43,13 @@ elastic_apm.settings:
         proxy:
           type: label
           label: 'Proxy'
-      privacy:
-        send_user:
-          type: boolean
-          label: 'Send user'
       captureThrowable:
         type: boolean
         label: 'Capture errors and exceptions'
       status:
         type: boolean
         label: 'Enabled'
+  privacy:
+    send_user:
+      type: boolean
+      label: 'Send user'

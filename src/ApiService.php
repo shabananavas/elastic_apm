@@ -64,7 +64,7 @@ class ApiService implements ApiServiceInterface {
     $php_agent_config = $this->config['phpAgent'];
 
      // Add the info to the options if its configured to send.
-    if ($php_agent_config['privacy']['send_user']) {
+    if ($this->config['privacy']['send_user']) {
       $options['user'] = [
         'id' => $this->account->id(),
         'email' => $this->account->getEmail(),

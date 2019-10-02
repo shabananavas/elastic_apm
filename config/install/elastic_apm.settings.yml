@@ -13,3 +13,5 @@ phpAgent:
     proxy: ''
   captureThrowable: FALSE
   status: FALSE
+privacy:
+  send_user: FALSE
