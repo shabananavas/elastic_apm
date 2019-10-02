@@ -157,7 +157,7 @@ class PhpAgentSettingsForm extends ConfigFormBase {
     // no value is provided. That causes Guzzle to report an error as it is
     // expecting an integer value, when there is a value. A NULL value should be
     // saved when no value is provided.
-    if (!($values['timeout'])) {
+    if (!$values['timeout']) {
       $values['timeout'] = NULL;
     }
 
