@@ -32,7 +32,7 @@ class TagSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('elastic_apm.settings');
+    $config = $this->config('elastic_apm.settings')->get('tags');
 
     $form['tags'] = [
       '#type' => 'details',
@@ -42,7 +42,7 @@ class TagSettingsForm extends ConfigFormBase {
     $form['tags']['path_pattern_tags'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Path Pattern Tags'),
-      '#default_value' => $config->get('tags')['path_patterns'],
+      '#default_value' => $config['path_pattern'],
       '#description' => $this->t('
         Configure which tags to send for which pages. Please use : to separate
         the path pattern from the tag and | to separate the key from the value.
@@ -51,6 +51,20 @@ class TagSettingsForm extends ConfigFormBase {
         <pre>
           /product/*: provider|commerce
           /checkout/*: provider|commerce
+        </pre>
+      '),
+    ];
+    $form['tags']['route_pattern_tags'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Route Pattern Tags'),
+      '#default_value' => $config['route_pattern'],
+      '#description' => $this->t('
+        Configure which tags to send for which pages. Please use : to separate
+        the path pattern from the tag and | to separate the key from the value.
+        The "*" character is a wildcard. Enter one path per line
+        Example:
+        <pre>
+          entity.commerce_product.canonical: provider|commerce
         </pre>
       '),
     ];
@@ -66,7 +80,8 @@ class TagSettingsForm extends ConfigFormBase {
 
     $this->config('elastic_apm.settings')
       ->set('tags', [
-        'path_patterns' => $values['path_pattern_tags'],
+        'route_pattern' => $values['route_pattern_tags'],
+        'path_pattern' => $values['path_pattern_tags'],
       ])
       ->save();
 

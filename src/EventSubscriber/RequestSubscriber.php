@@ -292,6 +292,7 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Add tags based on the path patterns configured.
     $tags = $tags + $this->preparePathPatternTags();
+    $tags = $tags + $this->prepareRoutePatternTags();
 
     return $tags;
   }
@@ -311,10 +312,10 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Fetch the configured path patterns.
     $tag_config = $this->apiService->getTagConfig();
-    $path_pattern = $tag_config['path_patterns'];
+    $path_pattern = $tag_config['path_pattern'];
 
     if (empty($path_pattern)) {
-      return;
+      return $tags;
     }
 
     // Explode path patterns by new line.
@@ -340,6 +341,79 @@ class RequestSubscriber implements EventSubscriberInterface {
     }
 
     return $tags;
+  }
+
+  /**
+   * Provide tags based on the route patterns configured.
+   *
+   * @return array
+   *   An array of tags to pass to the PHP Agent.
+   */
+  protected function prepareRoutePatternTags() {
+    $tags = [];
+
+    // Fetch the configured path patterns.
+    $tag_config = $this->apiService->getTagConfig();
+    $route_pattern = $tag_config['route_pattern'];
+
+    if (empty($route_pattern)) {
+      return $tags;
+    }
+
+    // Explode route patterns by new line.
+    $route_patterns = explode(PHP_EOL, $route_pattern);
+
+    // Add tags depending on the path pattern set.
+    foreach ($route_patterns as $route_pattern) {
+      $patterns = explode(':', $route_pattern);
+
+      // If the configured path does not match with the current path
+      // continue to look for the next pattern.
+      if (!$this->matchRoute(
+        $this->routeMatch->getRouteName(),
+        $patterns['0']
+      )) {
+        continue;
+      }
+
+      // Do not proceed if a tag value is not set.
+      if (empty($patterns['1'])) {
+        continue;
+      }
+
+      $tag_item = explode('|', $patterns['1']);
+      $tags[$tag_item['0']] = $tag_item['1'];
+    }
+
+    return $tags;
+  }
+
+  /**
+   * Checks if a route matches any pattern in a set of patterns.
+   *
+   * @param string $route
+   *   The route to match.
+   * @param string $pattern
+   *   The pattern string.
+   *
+   * @return bool
+   *   TRUE if the route matches the pattern, FALSE otherwise.
+   */
+  protected function matchRoute($route, $pattern) {
+    if (!isset($this->regexes[$pattern])) {
+      // Convert path settings to a regular expression.
+      $to_replace = [
+        // Quote asterisks.
+        '/\\\\\*/',
+      ];
+      $replacements = [
+        '.*',
+      ];
+      $patterns_quoted = preg_quote($pattern, '/');
+      $this->regexes[$pattern] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')$/';
+    }
+
+    return (bool) preg_match($this->regexes[$pattern], $route);
   }
 
 }
