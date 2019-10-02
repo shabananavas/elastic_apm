@@ -313,13 +313,25 @@ class RequestSubscriber implements EventSubscriberInterface {
     $tag_config = $this->apiService->getTagConfig();
     $path_pattern = $tag_config['path_patterns'];
 
+    if (empty($path_pattern)) {
+      return;
+    }
+
     // Explode path patterns by new line.
     $path_patterns = explode(PHP_EOL, $path_pattern);
 
     // Add tags depending on the path pattern set.
     foreach ($path_patterns as $path_pattern) {
       $patterns = explode(':', $path_pattern);
+
+      // If the configured path does not match with the current path
+      // continue to look for the next pattern.
       if (!($this->pathMatcher->matchPath($path, $patterns['0']))) {
+        continue;
+      }
+
+      // Do not proceed if a tag value is not set.
+      if (empty($patterns['1'])) {
         continue;
       }
 

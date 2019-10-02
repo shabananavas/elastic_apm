@@ -86,7 +86,7 @@ class ApiService implements ApiServiceInterface {
    * {@inheritdoc}
    */
   public function getTagConfig() {
-    return $this->config['phpAgent']['tags'];
+    return $this->config['tags'];
   }
 
   /**

@@ -49,9 +49,9 @@ elastic_apm.settings:
       status:
         type: boolean
         label: 'Enabled'
-      tags:
-        path_pattern:
-          type: sequence
-          label: 'Path pattern tags'
-          sequence:
-            type: string
+  tags:
+    path_pattern:
+      type: sequence
+      label: 'Path pattern tags'
+      sequence:
+        type: string

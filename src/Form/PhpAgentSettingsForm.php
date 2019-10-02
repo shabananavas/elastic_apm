@@ -116,27 +116,6 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('phpAgent.httpClient.proxy'),
     ];
 
-    $form['tags'] = [
-      '#type' => 'details',
-      '#title' => $this->t('Tag settings'),
-      '#open' => FALSE,
-    ];
-    $form['tags']['path_pattern_tags'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Path Pattern Tags'),
-      '#default_value' => $config->get('phpAgent.tags')['path_patterns'],
-      '#description' => $this->t('
-        Configure which tags to send for which pages. Please use : to separate
-        the path pattern from the tag and | to separate the key from the value.
-        The "*" character is a wildcard. Enter one path per line
-        Example:
-        <pre>
-          /product/*: provider|commerce
-          /checkout/*: provider|commerce
-        </pre>
-      '),
-    ];
-
     $form['errors'] = [
       '#type' => 'details',
       '#title' => $this->t('Error settings'),
@@ -179,9 +158,6 @@ class PhpAgentSettingsForm extends ConfigFormBase {
       ->set('phpAgent.httpClient', [
         'verify' => $values['verify'],
         'proxy' => $values['proxy'],
-      ])
-      ->set('phpAgent.tags', [
-        'path_patterns' => $values['path_pattern_tags'],
       ])
       ->set('phpAgent.status', $values['status'])
       ->save();
