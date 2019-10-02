@@ -85,6 +85,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getTagConfig() {
+    return $this->config['phpAgent']['tags'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPhpAgentConfigured() {
     $is_configured = TRUE;
 
@@ -100,7 +107,6 @@ class ApiService implements ApiServiceInterface {
         break;
       }
     }
-
     return $is_configured;
   }
 

@@ -5,11 +5,3 @@ elastic_apm.php_agent_settings:
     _title: 'Elastic APM PHP Agent Settings'
   requirements:
     _permission: 'administer elastic_apm'
-elastic_apm.tag_settings:
-  path: '/admin/config/development/elastic-apm/tag'
-  base_route: elastic_apm.php_agent_settings
-  defaults:
-    _form: '\Drupal\elastic_apm\Form\TagSettingsForm'
-    _title: 'Elastic APM Tag Settings'
-  requirements:
-    _permission: 'administer elastic_apm'

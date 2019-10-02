@@ -2,7 +2,3 @@ elastic_apm.php_agent_settings:
   title: 'PHP Agent Settings'
   route_name: 'elastic_apm.php_agent_settings'
   base_route: 'elastic_apm.php_agent_settings'
-elastic_apm.tag_settings:
-  title: 'Tag Settings'
-  route_name: 'elastic_apm.tag_settings'
-  base_route: 'elastic_apm.php_agent_settings'

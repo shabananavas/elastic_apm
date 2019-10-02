@@ -37,6 +37,14 @@ interface ApiServiceInterface {
   public function isPhpAgentEnabled();
 
   /**
+   * Returns the tag configuration array.
+   *
+   * @return array
+   *   The tag configuration array.
+   */
+  public function getTagConfig();
+
+  /**
    * Returns TRUE if the Elastic APM php agent settings are configured.
    *
    * @return bool
