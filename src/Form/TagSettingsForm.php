@@ -99,6 +99,14 @@ class TagSettingsForm extends ConfigFormBase {
       $patterns = $this->apiService
         ->parseTagPatterns($values['path_pattern_tags']);
 
+      if (empty($patterns['0'])) {
+        $form_state->setError(
+          $form['tags']['path_pattern_tags'],
+          $this->t('Please enter valid path patterns')
+        );
+        return;
+      }
+
       if (
         $patterns['0']['pattern'] &&
         $patterns['0']['tag_key'] &&
@@ -109,7 +117,7 @@ class TagSettingsForm extends ConfigFormBase {
 
       $form_state->setError(
         $form['tags']['path_pattern_tags'],
-        $this->t('Please enter a valid path pattern')
+        $this->t('Please enter valid path patterns')
       );
     }
   }
