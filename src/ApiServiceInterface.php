@@ -52,4 +52,15 @@ interface ApiServiceInterface {
    */
   public function isPhpAgentConfigured();
 
+  /**
+   * Returns the parsed tag patterns array.
+   *
+   * @param string $tag_config
+   *   The tag config string.
+   *
+   * @return array
+   *   The parsed tag config array.
+   */
+  public function parseTagPatterns($tag_config);
+
 }

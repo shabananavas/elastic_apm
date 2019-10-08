@@ -306,37 +306,27 @@ class RequestSubscriber implements EventSubscriberInterface {
     $tags = [];
 
     // Fetch the current path from route object.
-    $route_object = $this->routeMatch->getRouteObject();
-    $path = $route_object->getPath();
+    $path = $this->routeMatch->getRouteObject()->getPath();
 
     // Fetch the configured path patterns.
     $tag_config = $this->apiService->getTagConfig();
-    $path_pattern = $tag_config['path_patterns'];
 
-    if (empty($path_pattern)) {
-      return;
+    if (!$tag_config['path_patterns']) {
+      return $tags;
     }
 
-    // Explode path patterns by new line.
-    $path_patterns = explode(PHP_EOL, $path_pattern);
+    $patterns = $this->apiService
+      ->parseTagPatterns($tag_config['path_patterns']);
 
     // Add tags depending on the path pattern set.
-    foreach ($path_patterns as $path_pattern) {
-      $patterns = explode(':', $path_pattern);
-
+    foreach ($patterns as $pattern) {
       // If the configured path does not match with the current path
       // continue to look for the next pattern.
-      if (!($this->pathMatcher->matchPath($path, $patterns['0']))) {
+      if (!$this->pathMatcher->matchPath($path, $pattern['pattern'])) {
         continue;
       }
 
-      // Do not proceed if a tag value is not set.
-      if (empty($patterns['1'])) {
-        continue;
-      }
-
-      $tag_item = explode('|', $patterns['1']);
-      $tags[$tag_item['0']] = $tag_item['1'];
+      $tags[$pattern['tag_key']] = $pattern['tag_value'];
     }
 
     return $tags;
