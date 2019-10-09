@@ -11,6 +11,8 @@ use Drupal\elastic_apm\EventSubscriber\RequestSubscriber;
 
 use PhilKra\Agent;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use Symfony\Component\Routing\Route;
 
 /**
@@ -61,8 +63,13 @@ class RequestSubscriberTest extends UnitTestCase {
   public function testPrepareAgentOptions() {
     // Test prepareAgentOptions with no options set in the route.
     $agent_options = [];
-    $options = [];
-    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
+    $api_service_options = ['enabled' => TRUE, 'configured' => TRUE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
 
     $this->assertArrayEquals($agent_options, $this->invokeMethod(
       $request_subscriber,
@@ -72,10 +79,14 @@ class RequestSubscriberTest extends UnitTestCase {
 
     // Test prepareAgentOptions with options set in the route.
     $agent_options = ['tags' => ['is_admin_route' => TRUE]];
-    $options = [
+    $route_options = [
       '_admin_route' => TRUE,
     ];
-    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
 
     $this->assertArrayEquals($agent_options, $this->invokeMethod(
       $request_subscriber,
@@ -92,8 +103,13 @@ class RequestSubscriberTest extends UnitTestCase {
   public function testConstructQuerySpan() {
     // Test constructQuerySpan.
     $agent_options = [];
-    $options = [];
-    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
+    $api_service_options = ['enabled' => TRUE, 'configured' => TRUE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
 
     $connection_name = 'testConnectionName';
     $driver_name = 'testDriverName';
@@ -122,14 +138,89 @@ class RequestSubscriberTest extends UnitTestCase {
   public function testConstructDatabaseSpans() {
     // Test constructDatabaseSpans.
     $agent_options = [];
-    $options = [];
-    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
+    $api_service_options = ['enabled' => TRUE, 'configured' => TRUE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
 
     $this->assertArrayEquals([], $this->invokeMethod(
       $request_subscriber,
       'constructDatabaseSpans',
       []
     ));
+  }
+
+  /**
+   * Tests the onRequest method.
+   *
+   * ::covers onRequest.
+   */
+  public function testOnRequestFailures() {
+    // Test onRequest when Elastic APM service is not enabled.
+    $agent_options = [];
+    $api_service_options = ['enabled' => FALSE, 'configured' => TRUE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
+    $event = $this->prophesize(GetResponseEvent::class);
+    $event = $event->reveal();
+
+    $this->assertNull($request_subscriber->onRequest($event));
+
+    // Test onRequest when Elastic APM service is not configured.
+    $agent_options = [];
+    $api_service_options = ['enabled' => TRUE, 'configured' => FALSE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
+    $event = $this->prophesize(GetResponseEvent::class);
+    $event = $event->reveal();
+
+    $this->assertNull($request_subscriber->onRequest($event));
+  }
+
+  /**
+   * Tests the onKernelTerminate method.
+   *
+   * ::covers onKernelTerminate.
+   */
+  public function testOnKernelTerminateFailures() {
+    // Test onKernelTerminate when Elastic APM service is not enabled.
+    $agent_options = [];
+    $api_service_options = ['enabled' => FALSE, 'configured' => TRUE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
+    $event = $this->prophesize(PostResponseEvent::class);
+    $event = $event->reveal();
+
+    $this->assertNull($request_subscriber->onKernelTerminate($event));
+
+    // Test onKernelTerminate when Elastic APM service is not configured.
+    $agent_options = [];
+    $api_service_options = ['enabled' => TRUE, 'configured' => FALSE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
+    $event = $this->prophesize(PostResponseEvent::class);
+    $event = $event->reveal();
+
+    $this->assertNull($request_subscriber->onKernelTerminate($event));
   }
 
   /**
@@ -140,8 +231,13 @@ class RequestSubscriberTest extends UnitTestCase {
   public function testGetSubscribedEvents() {
     // Test getSubscribedEvents.
     $agent_options = [];
-    $options = [];
-    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
+    $api_service_options = ['enabled' => TRUE, 'configured' => TRUE];
+    $route_options = [];
+    $request_subscriber = $this->fetchRequestSubscriber(
+      $agent_options,
+      $api_service_options,
+      $route_options
+    );
 
     $expected_result = [
       'kernel.request' => ['onRequest', 30],
@@ -189,7 +285,10 @@ class RequestSubscriberTest extends UnitTestCase {
       [
         'function' => $query['caller']['function'],
         'abs_path' => $query['caller']['file'],
-        'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
+        'filename' => substr(
+          $query['caller']['file'],
+          strrpos($query['caller']['file'], '/') + 1
+        ),
         'lineno' => $query['caller']['line'],
         'vars' => $query['args'],
       ],
@@ -225,23 +324,30 @@ class RequestSubscriberTest extends UnitTestCase {
    *
    * @param array $agent_options
    *   An array of options to send to the Elastic APM agent.
-   * @param array $options
+   * @param array $api_service_options
+   *   An array of options to send to the API Service object.
+   * @param array $route_options
    *   An array of options to send to the Route object.
    *
    * @return \Drupal\elastic_apm\EventSubscriber\RequestSubscriber
    *   An initialized RequestSubscriber object.
    */
-  protected function fetchRequestSubscriber($agent_options, $options) {
+  protected function fetchRequestSubscriber(
+    $agent_options,
+    $api_service_options,
+    $route_options
+  ) {
     $agent = $this->prophesize(Agent::class);
     $agent = $agent->reveal();
     $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
+    $api_service->isEnabled()->willReturn($api_service_options['enabled']);
+    $api_service->isConfigured()
+      ->willReturn($api_service_options['configured']);
     $api_service->getAgent($agent_options)->willReturn($agent);
     $api_service = $api_service->reveal();
 
     $route = $this->prophesize(Route::class);
-    $route->getOptions()->willReturn($options);
+    $route->getOptions()->willReturn($route_options);
     $route = $route->reveal();
     $route_match = $this->prophesize(RouteMatchInterface::class);
     $route_match->getRouteObject()->willReturn($route);
@@ -270,7 +376,11 @@ class RequestSubscriberTest extends UnitTestCase {
    * @return mixed
    *   Method return.
    */
-  protected function invokeMethod(&$object, $methodName, array $parameters = []) {
+  protected function invokeMethod(
+    &$object,
+    $methodName,
+    array $parameters = []
+  ) {
     $reflection = new \ReflectionClass(get_class($object));
     $method = $reflection->getMethod($methodName);
     $method->setAccessible(TRUE);

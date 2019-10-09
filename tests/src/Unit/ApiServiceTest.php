@@ -6,8 +6,9 @@ use Drupal;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\elastic_apm\ApiService;
 use Drupal\Tests\UnitTestCase;
+
+use Drupal\elastic_apm\ApiService;
 
 use PhilKra\Agent;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -93,7 +94,8 @@ class ApiServiceTest extends UnitTestCase {
     $this->assertInstanceOf(Agent::class, $agent);
     $this->assertEquals('Test Elastic', $agent->getConfig()->get('appName'));
     $this->assertEquals('Drupal', $agent->getConfig()->get('framework'));
-    $this->assertEquals(Drupal::VERSION, $agent->getConfig()->get('frameworkVersion'));
+    $this->assertEquals(Drupal::VERSION, $agent->getConfig()
+      ->get('frameworkVersion'));
   }
 
   /**
