@@ -2,8 +2,11 @@
 
 namespace Drupal\elastic_apm\Form;
 
+use Drupal\elastic_apm\ApiServiceInterface;
+
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tag settings form for Elastic APM.
@@ -13,6 +16,32 @@ use Drupal\Core\Form\FormStateInterface;
  * @package Drupal\elastic_apm\Form
  */
 class TagSettingsForm extends ConfigFormBase {
+
+  /**
+   * The Elastic APM service object.
+   *
+   * @var \Drupal\elastic_apm\ApiServiceInterface
+   */
+  protected $apiService;
+
+  /**
+   * Constructs a new tag settings form object.
+   *
+   * @param Drupal\elastic_apm\ApiServiceInterface $api_service
+   *   The elastic api service.
+   */
+  public function __construct(ApiServiceInterface $api_service) {
+    $this->apiService = $api_service;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('elastic_apm.api_service')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -70,6 +99,41 @@ class TagSettingsForm extends ConfigFormBase {
     ];
 
     return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+
+    // If path pattern tags are set, ensure that it is entered in the expected
+    // format.
+    if ($values['path_pattern_tags']) {
+      $patterns = $this->apiService
+        ->parseTagPatterns($values['path_pattern_tags']);
+
+      if (empty($patterns['0'])) {
+        $form_state->setError(
+          $form['tags']['path_pattern_tags'],
+          $this->t('Please enter valid path patterns')
+        );
+        return;
+      }
+
+      if (
+        $patterns['0']['pattern'] &&
+        $patterns['0']['tag_key'] &&
+        $patterns['0']['tag_value']
+      ) {
+        return;
+      }
+
+      $form_state->setError(
+        $form['tags']['path_pattern_tags'],
+        $this->t('Please enter valid path patterns')
+      );
+    }
   }
 
   /**

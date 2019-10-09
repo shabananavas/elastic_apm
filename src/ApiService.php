@@ -110,4 +110,33 @@ class ApiService implements ApiServiceInterface {
     return $is_configured;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function parseTagPatterns($tag_config) {
+    $tag_patterns = [];
+
+    // Explode tag config by new line.
+    $pattern_array = explode(PHP_EOL, $tag_config);
+
+    foreach ($pattern_array as $pattern_item) {
+      $pattern_array = explode(':', $pattern_item);
+
+      // Early return if the path pattern is not set correctly.
+      if (empty($pattern_array['1'])) {
+        return;
+      }
+
+      $tag_item = explode('|', $pattern_array['1']);
+
+      $tag_patterns[] = [
+        'pattern' => $pattern_array['0'],
+        'tag_key' => !empty($tag_item['0']) ? $tag_item['0'] : '',
+        'tag_value' => !empty($tag_item['1']) ? $tag_item['1'] : '',
+      ];
+    }
+
+    return $tag_patterns;
+  }
+
 }
