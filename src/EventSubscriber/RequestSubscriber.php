@@ -342,6 +342,9 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected function prepareRoutePatternTags() {
     $tags = [];
 
+    // Fetch the current path from route object.
+    $route = $this->routeMatch->getRouteName();
+
     // Fetch the configured path patterns.
     $tag_config = $this->apiService->getTagConfig();
 
@@ -351,12 +354,11 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     $patterns = $this->apiService
       ->parseTagPatterns($tag_config['route_pattern']);
-
     // Add tags depending on the path pattern set.
     foreach ($patterns as $pattern) {
-      // If the configured path does not match with the current path
+      // If the configured route does not match with the current route
       // continue to look for the next pattern.
-      if (!$this->pathMatcher->matchRoute($path, $pattern['pattern'])) {
+      if (!$this->matchRoute($route, $pattern['pattern'])) {
         continue;
       }
 

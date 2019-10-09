@@ -117,6 +117,17 @@ class TagSettingsForm extends ConfigFormBase {
         );
       }
     }
+
+    // If route pattern tags are set, ensure that it is entered in the expected
+    // format.
+    if ($values['route_pattern_tags']) {
+      if (!$this->validateTagPatterns($values['route_pattern_tags'])) {
+        $form_state->setError(
+          $form['tags']['route_pattern_tags'],
+          $this->t('Please enter valid route patterns')
+        );
+      }
+    }
   }
 
   /**
