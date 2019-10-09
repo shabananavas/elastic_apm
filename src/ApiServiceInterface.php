@@ -63,4 +63,12 @@ interface ApiServiceInterface {
    */
   public function parseTagPatterns($tag_config);
 
+  /**
+   * Returns TRUE if current page is configured to be monitored by elastic apm.
+   *
+   * @return bool
+   *   TRUE if the current page is in the include list, FALSE otherwise.
+   */
+  public function monitorPage();
+
 }

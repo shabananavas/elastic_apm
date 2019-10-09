@@ -3,7 +3,11 @@
 namespace Drupal\elastic_apm;
 
 use Drupal;
+
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Path\AliasManagerInterface;
+use Drupal\Core\Path\PathMatcherInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 
 use PhilKra\Agent;
@@ -30,18 +34,51 @@ class ApiService implements ApiServiceInterface {
   protected $account;
 
   /**
+   * An alias manager to find the alias for the current system path.
+   *
+   * @var \Drupal\Core\Path\AliasManagerInterface
+   */
+  protected $aliasManager;
+
+  /**
+   * The current path.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
+   * The path matcher.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  private $pathMatcher;
+
+  /**
    * Constructs an Elastic APM object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $account
    *   The current account.
+   * @param \Drupal\Core\Path\AliasManagerInterface $alias_manager
+   *   An alias manager to find the alias for the current system path.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The current route.
+   * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
+   *   The path matcher.
    */
   public function __construct(
     ConfigFactoryInterface $configFactory,
-    AccountProxyInterface $account
+    AccountProxyInterface $account,
+    AliasManagerInterface $alias_manager,
+    RouteMatchInterface $route_match,
+    PathMatcherInterface $pathMatcher
   ) {
     $this->account = $account;
+    $this->routeMatch = $route_match;
+    $this->pathMatcher = $pathMatcher;
+    $this->aliasManager = $alias_manager;
 
     $this->config = $configFactory->get('elastic_apm.settings')->get();
     $this->config += [
@@ -92,6 +129,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPageMonitorConfig() {
+    return $this->config['page_monitor'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPhpAgentConfigured() {
     $is_configured = TRUE;
 
@@ -137,6 +181,45 @@ class ApiService implements ApiServiceInterface {
     }
 
     return $tag_patterns;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function monitorPage() {
+    $config = $this->getPageMonitorConfig();
+
+    $pattern_array = explode(PHP_EOL, $config['path']['pattern']);
+    if (!$pattern_array) {
+      return TRUE;
+    }
+
+    // Are the pages supposed to be excluded from the requests?
+    $negate = $config['path']['negate'] ?: FALSE;
+
+    // Get the current path.
+    $path = $this->routeMatch->getRouteObject()->getPath();
+
+    // Do not trim a trailing slash if that is the complete path.
+    $path = $path === '/' ? $path : rtrim($path, '/');
+    $path_alias = mb_strtolower($this->aliasManager->getAliasByPath($path));
+
+    foreach ($pattern_array as $pattern) {
+      if (
+        $this->pathMatcher->matchPath($path, $pattern) ||
+        $this->pathMatcher->matchPath($path_alias, $pattern)) {
+        // If we get a path match and negate is configured, we do not monitor
+        // the page.
+        if ($negate) {
+          return FALSE;
+        }
+
+        return TRUE;
+      }
+    }
+
+    return FALSE;
   }
 
 }

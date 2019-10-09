@@ -6,3 +6,7 @@ elastic_apm.tag_settings:
   title: 'Tag Settings'
   route_name: 'elastic_apm.tag_settings'
   base_route: 'elastic_apm.php_agent_settings'
+elastic_apm.page_monitor_settings:
+  title: 'Page monitor Settings'
+  route_name: 'elastic_apm.page_monitor_settings'
+  base_route: 'elastic_apm.php_agent_settings'

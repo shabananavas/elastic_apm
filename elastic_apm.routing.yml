@@ -12,3 +12,10 @@ elastic_apm.tag_settings:
     _title: 'Elastic APM Tag Settings'
   requirements:
     _permission: 'administer elastic_apm'
+elastic_apm.page_monitor_settings:
+  path: '/admin/config/development/elastic-apm/monitor-page'
+  defaults:
+    _form: '\Drupal\elastic_apm\Form\PageMonitorSettingsForm'
+    _title: 'Elastic APM Page monitor Settings'
+  requirements:
+    _permission: 'administer elastic_apm'

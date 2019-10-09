@@ -60,3 +60,13 @@ elastic_apm.settings:
       label: 'Route pattern tags'
       sequence:
         type: string
+  page_monitor:
+    path:
+      pattern:
+        type: sequence
+        label: 'Page Monitor Path pattern'
+        sequence:
+          type: string
+      negate:
+        type: boolean
+        label: 'Page Monitor Path pattern'
