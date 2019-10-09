@@ -110,29 +110,12 @@ class TagSettingsForm extends ConfigFormBase {
     // If path pattern tags are set, ensure that it is entered in the expected
     // format.
     if ($values['path_pattern_tags']) {
-      $patterns = $this->apiService
-        ->parseTagPatterns($values['path_pattern_tags']);
-
-      if (empty($patterns['0'])) {
+      if (!$this->validateTagPatterns($values['path_pattern_tags'])) {
         $form_state->setError(
           $form['tags']['path_pattern_tags'],
           $this->t('Please enter valid path patterns')
         );
-        return;
       }
-
-      if (
-        $patterns['0']['pattern'] &&
-        $patterns['0']['tag_key'] &&
-        $patterns['0']['tag_value']
-      ) {
-        return;
-      }
-
-      $form_state->setError(
-        $form['tags']['path_pattern_tags'],
-        $this->t('Please enter valid path patterns')
-      );
     }
   }
 
@@ -150,6 +133,40 @@ class TagSettingsForm extends ConfigFormBase {
       ->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Validates the tag patterns string.
+   *
+   * Ensures that the patterns are entered in the expected format
+   * /product/*: provider|commerce
+   *
+   * @param string $patterns_string
+   *   The patterns string.
+   *
+   * @return bool
+   *   True if the provided pattern is valid, False otherwise.
+   */
+  private function validateTagPatterns($patterns_string) {
+    $patterns = $this->apiService
+      ->parseTagPatterns($patterns_string);
+
+    // If we cannot find a single pattern we return FALSE
+    if (empty($patterns['0'])) {
+      return FALSE;
+    }
+
+    // If all the required key is present in the pattern string, we return TRUE.
+    if (
+        $patterns['0']['pattern'] &&
+        $patterns['0']['tag_key'] &&
+        $patterns['0']['tag_value']
+      ) {
+      return TRUE;
+    }
+
+    return FALSE;
+
   }
 
 }
