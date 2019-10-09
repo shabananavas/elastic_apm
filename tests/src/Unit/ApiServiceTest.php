@@ -61,37 +61,19 @@ class ApiServiceTest extends UnitTestCase {
    */
   public function testCaptureThrowable() {
     // Test captureThrowable is FALSE.
-    // Initialize the Elastic APM configs.
     $configs = [
       'captureThrowable' => FALSE,
     ];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
+    $api_service = $this->fetchApiService($configs);
 
-    $api_service = new ApiService($config_factory, $this->account);
     $this->assertFalse($api_service->captureThrowable());
 
     // Test captureThrowable is TRUE.
-    // Initialize the Elastic APM configs.
     $configs = [
       'captureThrowable' => TRUE,
     ];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
+    $api_service = $this->fetchApiService($configs);
 
-    $api_service = new ApiService($config_factory, $this->account);
     $this->assertTrue($api_service->captureThrowable());
   }
 
@@ -102,21 +84,12 @@ class ApiServiceTest extends UnitTestCase {
    */
   public function testGetAgent() {
     // Test getAgent.
-    // Initialize the Elastic APM configs.
     $configs = [
       'appName' => 'Test Elastic',
     ];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
-
-    $api_service = new ApiService($config_factory, $this->account);
+    $api_service = $this->fetchApiService($configs);
     $agent = $api_service->getAgent([]);
+
     $this->assertInstanceOf(Agent::class, $agent);
     $this->assertEquals('Test Elastic', $agent->getConfig()->get('appName'));
     $this->assertEquals('Drupal', $agent->getConfig()->get('framework'));
@@ -130,37 +103,19 @@ class ApiServiceTest extends UnitTestCase {
    */
   public function testIsEnabled() {
     // Test isEnabled when active is set to FALSE.
-    // Initialize the Elastic APM configs.
     $configs = [
       'active' => FALSE,
     ];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
+    $api_service = $this->fetchApiService($configs);
 
-    $api_service = new ApiService($config_factory, $this->account);
     $this->assertFalse($api_service->isEnabled());
 
     // Test isEnabled when active is set to TRUE.
-    // Initialize the Elastic APM configs.
     $configs = [
       'active' => TRUE,
     ];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
+    $api_service = $this->fetchApiService($configs);
 
-    $api_service = new ApiService($config_factory, $this->account);
     $this->assertTrue($api_service->isEnabled());
   }
 
@@ -171,47 +126,43 @@ class ApiServiceTest extends UnitTestCase {
    */
   public function testIsConfigured() {
     // Test isConfigured when required configs aren't set.
-    // Initialize the Elastic APM configs.
     $configs = [];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
+    $api_service = $this->fetchApiService($configs);
 
-    $api_service = new ApiService($config_factory, $this->account);
     $this->assertFalse($api_service->isConfigured());
 
     // Test isConfigured when all but one of the required configs are set.
-    // Initialize the Elastic APM configs.
     $configs = [
       'appName' => 'Test Elastic',
       'secretToken' => 'Mysecrettoken',
       'apmVersion' => '1.0.42',
     ];
-    $config = $this->prophesize(ImmutableConfig::class);
-    $config->get()->willReturn($configs);
-    $config_factory = $this->prophesize(
-      ConfigFactoryInterface::class
-    );
-    $config_factory->get('elastic_apm.connection_settings')
-      ->willReturn($config->reveal());
-    $config_factory = $config_factory->reveal();
+    $api_service = $this->fetchApiService($configs);
 
-    $api_service = new ApiService($config_factory, $this->account);
     $this->assertFalse($api_service->isConfigured());
 
     // Test isConfigured when required configs are set.
-    // Initialize the Elastic APM configs.
     $configs = [
       'appName' => 'Test Elastic',
       'serverUrl' => 'http://apm-server.example.com',
       'secretToken' => 'Mysecrettoken',
       'apmVersion' => '1.0.42',
     ];
+    $api_service = $this->fetchApiService($configs);
+
+    $this->assertTrue($api_service->isConfigured());
+  }
+
+  /**
+   * Constructs and returns a new ApiService class.
+   *
+   * @param array $configs
+   *   An array of configs to pass to the ImmutableConfig object.
+   *
+   * @return \Drupal\elastic_apm\ApiService
+   *   An initialized ApiService class.
+   */
+  protected function fetchApiService($configs) {
     $config = $this->prophesize(ImmutableConfig::class);
     $config->get()->willReturn($configs);
     $config_factory = $this->prophesize(
@@ -221,8 +172,7 @@ class ApiServiceTest extends UnitTestCase {
       ->willReturn($config->reveal());
     $config_factory = $config_factory->reveal();
 
-    $api_service = new ApiService($config_factory, $this->account);
-    $this->assertTrue($api_service->isConfigured());
+    return new ApiService($config_factory, $this->account);
   }
 
 }

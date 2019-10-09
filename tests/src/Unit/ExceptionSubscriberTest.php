@@ -26,18 +26,7 @@ class ExceptionSubscriberTest extends UnitTestCase {
    */
   public function testGetSubscribedEvents() {
     // Test getSubscribedEvents.
-    // Create necessary classes to pass to the RequestSubscriber constructor.
-    $agent = $this->prophesize(Agent::class);
-    $agent = $agent->reveal();
-    $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
-    $api_service->getAgent()->willReturn($agent);
-    $api_service = $api_service->reveal();
-
-    $exception_subscriber = new ExceptionSubscriber(
-      $api_service
-    );
+    $exception_subscriber = $this->fetchExceptionSubscriber();
 
     $expected_result = [
       'kernel.exception' => ['onException', -300],
@@ -47,6 +36,26 @@ class ExceptionSubscriberTest extends UnitTestCase {
       'getSubscribedEvents',
       []
     ));
+  }
+
+  /**
+   * Constructs and returns a new ExceptionSubscriber class.
+   *
+   * @return \Drupal\elastic_apm\EventSubscriber\ExceptionSubscriber
+   *   An initialized ExceptionSubscriber object.
+   */
+  protected function fetchExceptionSubscriber() {
+    $agent = $this->prophesize(Agent::class);
+    $agent = $agent->reveal();
+    $api_service = $this->prophesize(ApiService::class);
+    $api_service->isEnabled()->willReturn(TRUE);
+    $api_service->isConfigured()->willReturn(TRUE);
+    $api_service->getAgent()->willReturn($agent);
+    $api_service = $api_service->reveal();
+
+    return new ExceptionSubscriber(
+      $api_service
+    );
   }
 
   /**

@@ -60,30 +60,10 @@ class RequestSubscriberTest extends UnitTestCase {
    */
   public function testPrepareAgentOptions() {
     // Test prepareAgentOptions with no options set in the route.
-    // Create necessary classes to pass to the RequestSubscriber constructor.
     $agent_options = [];
-    $agent = $this->prophesize(Agent::class);
-    $agent = $agent->reveal();
-    $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
-    $api_service->getAgent($agent_options)->willReturn($agent);
-    $api_service = $api_service->reveal();
-
     $options = [];
-    $route = $this->prophesize(Route::class);
-    $route->getOptions()->willReturn($options);
-    $route = $route->reveal();
-    $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRouteObject()->willReturn($route);
-    $route_match = $route_match->reveal();
+    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
 
-    $request_subscriber = new RequestSubscriber(
-      $api_service,
-      $route_match,
-      $this->logger,
-      $this->time
-    );
     $this->assertArrayEquals($agent_options, $this->invokeMethod(
       $request_subscriber,
       'prepareAgentOptions',
@@ -91,32 +71,12 @@ class RequestSubscriberTest extends UnitTestCase {
     ));
 
     // Test prepareAgentOptions with options set in the route.
-    // Create necessary classes to pass to the RequestSubscriber constructor.
     $agent_options = ['tags' => ['is_admin_route' => TRUE]];
-    $agent = $this->prophesize(Agent::class);
-    $agent = $agent->reveal();
-    $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
-    $api_service->getAgent($agent_options)->willReturn($agent);
-    $api_service = $api_service->reveal();
-
     $options = [
       '_admin_route' => TRUE,
     ];
-    $route = $this->prophesize(Route::class);
-    $route->getOptions()->willReturn($options);
-    $route = $route->reveal();
-    $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRouteObject()->willReturn($route);
-    $route_match = $route_match->reveal();
+    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
 
-    $request_subscriber = new RequestSubscriber(
-      $api_service,
-      $route_match,
-      $this->logger,
-      $this->time
-    );
     $this->assertArrayEquals($agent_options, $this->invokeMethod(
       $request_subscriber,
       'prepareAgentOptions',
@@ -131,30 +91,10 @@ class RequestSubscriberTest extends UnitTestCase {
    */
   public function testConstructQuerySpan() {
     // Test constructQuerySpan.
-    // Create necessary classes to pass to the RequestSubscriber constructor.
     $agent_options = [];
-    $agent = $this->prophesize(Agent::class);
-    $agent = $agent->reveal();
-    $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
-    $api_service->getAgent($agent_options)->willReturn($agent);
-    $api_service = $api_service->reveal();
-
     $options = [];
-    $route = $this->prophesize(Route::class);
-    $route->getOptions()->willReturn($options);
-    $route = $route->reveal();
-    $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRouteObject()->willReturn($route);
-    $route_match = $route_match->reveal();
+    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
 
-    $request_subscriber = new RequestSubscriber(
-      $api_service,
-      $route_match,
-      $this->logger,
-      $this->time
-    );
     $connection_name = 'testConnectionName';
     $driver_name = 'testDriverName';
     $expected_result = $this->getExpectedSpanData(
@@ -181,30 +121,9 @@ class RequestSubscriberTest extends UnitTestCase {
    */
   public function testConstructDatabaseSpans() {
     // Test constructDatabaseSpans.
-    // Create necessary classes to pass to the RequestSubscriber constructor.
     $agent_options = [];
-    $agent = $this->prophesize(Agent::class);
-    $agent = $agent->reveal();
-    $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
-    $api_service->getAgent($agent_options)->willReturn($agent);
-    $api_service = $api_service->reveal();
-
     $options = [];
-    $route = $this->prophesize(Route::class);
-    $route->getOptions()->willReturn($options);
-    $route = $route->reveal();
-    $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRouteObject()->willReturn($route);
-    $route_match = $route_match->reveal();
-
-    $request_subscriber = new RequestSubscriber(
-      $api_service,
-      $route_match,
-      $this->logger,
-      $this->time
-    );
+    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
 
     $this->assertArrayEquals([], $this->invokeMethod(
       $request_subscriber,
@@ -220,30 +139,9 @@ class RequestSubscriberTest extends UnitTestCase {
    */
   public function testGetSubscribedEvents() {
     // Test getSubscribedEvents.
-    // Create necessary classes to pass to the RequestSubscriber constructor.
     $agent_options = [];
-    $agent = $this->prophesize(Agent::class);
-    $agent = $agent->reveal();
-    $api_service = $this->prophesize(ApiService::class);
-    $api_service->isEnabled()->willReturn(TRUE);
-    $api_service->isConfigured()->willReturn(TRUE);
-    $api_service->getAgent($agent_options)->willReturn($agent);
-    $api_service = $api_service->reveal();
-
     $options = [];
-    $route = $this->prophesize(Route::class);
-    $route->getOptions()->willReturn($options);
-    $route = $route->reveal();
-    $route_match = $this->prophesize(RouteMatchInterface::class);
-    $route_match->getRouteObject()->willReturn($route);
-    $route_match = $route_match->reveal();
-
-    $request_subscriber = new RequestSubscriber(
-      $api_service,
-      $route_match,
-      $this->logger,
-      $this->time
-    );
+    $request_subscriber = $this->fetchRequestSubscriber($agent_options, $options);
 
     $expected_result = [
       'kernel.request' => ['onRequest', 30],
@@ -323,6 +221,41 @@ class RequestSubscriberTest extends UnitTestCase {
   }
 
   /**
+   * Constructs and returns a new RequestSubscriber class.
+   *
+   * @param array $agent_options
+   *   An array of options to send to the Elastic APM agent.
+   * @param array $options
+   *   An array of options to send to the Route object.
+   *
+   * @return \Drupal\elastic_apm\EventSubscriber\RequestSubscriber
+   *   An initialized RequestSubscriber object.
+   */
+  protected function fetchRequestSubscriber($agent_options, $options) {
+    $agent = $this->prophesize(Agent::class);
+    $agent = $agent->reveal();
+    $api_service = $this->prophesize(ApiService::class);
+    $api_service->isEnabled()->willReturn(TRUE);
+    $api_service->isConfigured()->willReturn(TRUE);
+    $api_service->getAgent($agent_options)->willReturn($agent);
+    $api_service = $api_service->reveal();
+
+    $route = $this->prophesize(Route::class);
+    $route->getOptions()->willReturn($options);
+    $route = $route->reveal();
+    $route_match = $this->prophesize(RouteMatchInterface::class);
+    $route_match->getRouteObject()->willReturn($route);
+    $route_match = $route_match->reveal();
+
+    return new RequestSubscriber(
+      $api_service,
+      $route_match,
+      $this->logger,
+      $this->time
+    );
+  }
+
+  /**
    * Call protected/private method of a class.
    *
    * We'll need this special function to test the protected functions.
@@ -341,6 +274,7 @@ class RequestSubscriberTest extends UnitTestCase {
     $reflection = new \ReflectionClass(get_class($object));
     $method = $reflection->getMethod($methodName);
     $method->setAccessible(TRUE);
+
     return $method->invokeArgs($object, $parameters);
   }
 
