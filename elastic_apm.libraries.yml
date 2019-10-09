@@ -7,7 +7,7 @@ rum:
     gpl-compatible: true
   js:
     https://unpkg.com/@elastic/apm-rum@4.4.2/dist/bundles/elastic-apm-rum.umd.min.js:
-      type: external,
+      type: external
       attributes:
         crossorigin: true
 
