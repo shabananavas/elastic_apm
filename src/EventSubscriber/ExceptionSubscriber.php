@@ -40,14 +40,14 @@ class ExceptionSubscriber implements EventSubscriberInterface {
     $this->apiService = $api_service;
 
     // Initialize the PHP agent only if Elastic APM is enabled and configured.
-    if (!$this->apiService->isEnabled()) {
+    if (!$this->apiService->isPhpAgentEnabled()) {
       return;
     }
-    if (!$this->apiService->isConfigured()) {
+    if (!$this->apiService->isPhpAgentConfigured()) {
       return;
     }
 
-    $this->phpAgent = $this->apiService->getAgent();
+    $this->phpAgent = $this->apiService->getPhpAgent();
   }
 
   /**
@@ -67,12 +67,12 @@ class ExceptionSubscriber implements EventSubscriberInterface {
    */
   public function onException(GetResponseForExceptionEvent $event) {
     // Return if Elastic isn't enabled.
-    if (!$this->apiService->isEnabled()) {
+    if (!$this->apiService->isPhpAgentEnabled()) {
       return;
     }
 
     // Don't process if Elastic APM is not configured.
-    if (!$this->apiService->isConfigured()) {
+    if (!$this->apiService->isPhpAgentConfigured()) {
       return;
     }
 

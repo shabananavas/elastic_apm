@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Drupal\elastic_apm;
 
 /**
@@ -27,22 +26,22 @@ interface ApiServiceInterface {
    * @return \PhilKra\Agent
    *   The Elastic APM PHP agent.
    */
-  public function getAgent(array $options);
+  public function getPhpAgent(array $options);
 
   /**
-   * Returns TRUE if the user has enabled Elastic APM.
+   * Returns TRUE if the user has enabled Elastic APM PHP Agent.
    *
    * @return bool
    *   TRUE if it is enabled, FALSE otherwise.
    */
-  public function isEnabled();
+  public function isPhpAgentEnabled();
 
   /**
-   * Returns TRUE if the Elastic APM connection settings are configured.
+   * Returns TRUE if the Elastic APM php agent settings are configured.
    *
    * @return bool
-   *   TRUE if the connection settings are configured, FALSE otherwise.
+   *   TRUE if the php agent settings are configured, FALSE otherwise.
    */
-  public function isConfigured();
+  public function isPhpAgentConfigured();
 
 }

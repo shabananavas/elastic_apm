@@ -1,48 +1,51 @@
-elastic_apm.connection_settings:
+elastic_apm.settings:
   type: config_object
-  label: 'Elastic APM Connection Settings'
-  mapping:
-    appName:
-      type: label
-      label: 'App name'
-    appVersion:
-      type: label
-      label: 'App version'
-    serverUrl:
-      type: label
-      label: 'Server URL'
-    secretToken:
-      type: label
-      label: 'Secret token'
-    hostname:
-      type: label
-      label: 'Host name'
-    timeout:
-      type: int
-      label: 'Guzzle Client timeout'
-    apmVersion:
-      type: label
-      label: 'APM version'
-    env:
-      type: sequence
-      label: '$_SERVER variables'
-      sequence:
-        type: string
-    cookies:
-      type: sequence
-      label: 'Cookies'
-      sequence:
-        type: string
-    httpClient:
-      verify:
-        type: boolean
-        label: 'Verify'
-      proxy:
+  label: 'Elastic APM Settings'
+  phpAgent:
+    type: mapping
+    label: 'PHP Agent Settings'
+    mapping:
+      appName:
         type: label
-        label: 'Proxy'
-    captureThrowable:
-      type: boolean
-      label: 'Capture errors and exceptions'
-    active:
-      type: boolean
-      label: 'Enabled'
+        label: 'App name'
+      appVersion:
+        type: label
+        label: 'App version'
+      serverUrl:
+        type: label
+        label: 'Server URL'
+      secretToken:
+        type: label
+        label: 'Secret token'
+      hostname:
+        type: label
+        label: 'Host name'
+      timeout:
+        type: int
+        label: 'Guzzle Client timeout'
+      apmVersion:
+        type: label
+        label: 'APM version'
+      env:
+        type: sequence
+        label: '$_SERVER variables'
+        sequence:
+          type: string
+      cookies:
+        type: sequence
+        label: 'Cookies'
+        sequence:
+          type: string
+      httpClient:
+        verify:
+          type: boolean
+          label: 'Verify'
+        proxy:
+          type: label
+          label: 'Proxy'
+      captureThrowable:
+        type: boolean
+        label: 'Capture errors and exceptions'
+      status:
+        type: boolean
+        label: 'Enabled'

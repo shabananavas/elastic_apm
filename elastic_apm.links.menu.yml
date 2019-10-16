@@ -1,5 +1,5 @@
-elastic_apm.connection_settings:
-  title: 'Elastic APM'
-  route_name: 'elastic_apm.connection_settings'
+elastic_apm.php_agent_settings:
+  title: 'Elastic APM PHP Agent'
+  route_name: 'elastic_apm.php_agent_settings'
   parent: 'system.admin_config_development'
-  description: 'Administer Elastic APM connection settings and configuration.'
+  description: 'Administer Elastic APM PHP agent connection settings and configuration.'

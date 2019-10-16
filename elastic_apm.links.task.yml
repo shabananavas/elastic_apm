@@ -1,4 +1,4 @@
-elastic_apm.connection_settings:
-  title: 'Connection Settings'
-  route_name: 'elastic_apm.connection_settings'
-  base_route: 'elastic_apm.connection_settings'
+elastic_apm.php_agent_settings:
+  title: 'PHP Agent Settings'
+  route_name: 'elastic_apm.php_agent_settings'
+  base_route: 'elastic_apm.php_agent_settings'
