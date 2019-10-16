@@ -49,3 +49,10 @@ elastic_apm.settings:
       status:
         type: boolean
         label: 'Enabled'
+  privacy:
+    type: mapping
+    label: 'Privacy Settings'
+    mapping:
+      track_user:
+        type: boolean
+        label: 'Track user'
