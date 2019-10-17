@@ -63,6 +63,16 @@ class TagSettingsForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('elastic_apm.settings')->get('tags');
 
+    $form['user_role'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Add user role tags'),
+      '#description' => $this->t(
+        'When checked, tags will be added to transactions indicating whether the
+        visitor initiating the request is an anonymous/ authenticated user.'
+      ),
+      '#default_value' => empty($config['user_role']) ? FALSE : TRUE,
+    ];
+
     $form['paths'] = [
       '#type' => 'details',
       '#title' => $this->t('Paths'),
@@ -184,6 +194,7 @@ class TagSettingsForm extends ConfigFormBase {
         [
           'path_patterns' => $values['path_patterns'],
           'route_patterns' => $values['route_patterns'],
+          'user_role' => (bool) $values['user_role'],
         ]
       )
       ->save();

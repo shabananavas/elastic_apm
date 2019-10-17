@@ -23,6 +23,7 @@ services:
       - '@logger.channel.elastic_apm'
       - '@datetime.time'
       - '@path.matcher'
+      - '@current_user'
     tags:
       - {name: event_subscriber}
 

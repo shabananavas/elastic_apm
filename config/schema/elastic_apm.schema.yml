@@ -67,3 +67,6 @@ elastic_apm.settings:
       label: 'Route patterns'
       sequence:
         type: string
+    user_role:
+      type: boolean
+      label: 'User role'

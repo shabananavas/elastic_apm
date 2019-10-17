@@ -8,6 +8,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 use Exception;
@@ -78,6 +79,13 @@ class RequestSubscriber implements EventSubscriberInterface {
   private $pathMatcher;
 
   /**
+   * The current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * Constructs a RequestSubscriber object.
    *
    * @param \Drupal\elastic_apm\ApiServiceInterface $api_service
@@ -88,21 +96,24 @@ class RequestSubscriber implements EventSubscriberInterface {
    *   The logger service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The system time service.
-   * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
+   * @param \Drupal\Core\Path\PathMatcherInterface $path_matcher
    *   The path matcher.
+   * @param \Drupal\Core\Session\AccountProxyInterface $account_proxy
    */
   public function __construct(
     ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
     LoggerInterface $logger,
     TimeInterface $time,
-    PathMatcherInterface $pathMatcher
+    PathMatcherInterface $path_matcher,
+    AccountProxyInterface $account_proxy
   ) {
     $this->apiService = $api_service;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
     $this->time = $time;
-    $this->pathMatcher = $pathMatcher;
+    $this->pathMatcher = $path_matcher;
+    $this->currentUser = $account_proxy->getAccount();
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isPhpAgentEnabled() && $this->apiService->isPhpAgentConfigured()) {
@@ -291,9 +302,12 @@ class RequestSubscriber implements EventSubscriberInterface {
       $tags['is_admin_route'] = TRUE;
     }
 
-    // Add tags based on the path patterns configured.
+    // Add tags based on the path/route patterns configured.
     $tags = $tags + $this->preparePathPatternTags();
     $tags = $tags + $this->prepareRoutePatternTags();
+
+    // Add tags based on whether the user is authenticated or anonymous.
+    $tags = $tags + $this->prepareUserRoleTags();
 
     return ['tags' => $tags];
   }
@@ -368,6 +382,25 @@ class RequestSubscriber implements EventSubscriberInterface {
     }
 
     return $tags;
+  }
+
+  /**
+   * Provide tags based on whether the user is authenticated/anonymous.
+   *
+   * @return array
+   *   An array of tags to pass to Elastic APM.
+   */
+  protected function prepareUserRoleTags() {
+    $tag_config = $this->apiService->getTagConfig();
+
+    if (empty($tag_config['user_role'])) {
+      return [];
+    }
+
+    return [
+      'user-is-anonymous' => $this->currentUser->isAnonymous(),
+      'user-is-authenticated' => $this->currentUser->isAuthenticated(),
+    ];
   }
 
   /**

@@ -18,3 +18,4 @@ privacy:
 tags:
   path_patterns: ''
   route_patterns: ''
+  user_role: false
