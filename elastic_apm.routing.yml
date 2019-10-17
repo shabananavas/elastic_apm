@@ -2,7 +2,7 @@ elastic_apm.php_agent_settings:
   path: '/admin/config/development/elastic-apm'
   defaults:
     _form: '\Drupal\elastic_apm\Form\PhpAgentSettingsForm'
-    _title: 'Elastic APM PHP Agent Settings'
+    _title: 'Elastic APM PHP agent settings'
   requirements:
     _permission: 'administer elastic_apm'
 
@@ -10,6 +10,14 @@ elastic_apm.privacy_settings:
   path: '/admin/config/development/elastic-apm/privacy'
   defaults:
     _form: '\Drupal\elastic_apm\Form\PrivacySettingsForm'
-    _title: 'Elastic APM Privacy Settings'
+    _title: 'Elastic APM privacy settings'
+  requirements:
+    _permission: 'administer elastic_apm'
+
+elastic_apm.tag_settings:
+  path: '/admin/config/development/elastic-apm/tag'
+  defaults:
+    _form: '\Drupal\elastic_apm\Form\TagSettingsForm'
+    _title: 'Elastic APM tag settings'
   requirements:
     _permission: 'administer elastic_apm'

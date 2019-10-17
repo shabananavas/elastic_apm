@@ -6,6 +6,7 @@ use Drupal\elastic_apm\ApiServiceInterface;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Database\Database;
+use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -70,6 +71,13 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected $processedMasterRequest = FALSE;
 
   /**
+   * The path matcher.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  private $pathMatcher;
+
+  /**
    * Constructs a RequestSubscriber object.
    *
    * @param \Drupal\elastic_apm\ApiServiceInterface $api_service
@@ -80,17 +88,21 @@ class RequestSubscriber implements EventSubscriberInterface {
    *   The logger service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The system time service.
+   * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
+   *   The path matcher.
    */
   public function __construct(
     ApiServiceInterface $api_service,
     RouteMatchInterface $route_match,
     LoggerInterface $logger,
-    TimeInterface $time
+    TimeInterface $time,
+    PathMatcherInterface $pathMatcher
   ) {
     $this->apiService = $api_service;
     $this->routeMatch = $route_match;
     $this->logger = $logger;
     $this->time = $time;
+    $this->pathMatcher = $pathMatcher;
 
     // Initialize the PHP agent if the Elastic APM config is configured.
     if ($this->apiService->isPhpAgentEnabled() && $this->apiService->isPhpAgentConfigured()) {
@@ -269,15 +281,56 @@ class RequestSubscriber implements EventSubscriberInterface {
    * Currently we are just tagging admin pages.
    *
    * @return array
-   *   An array of options to pass to the PHP Agent. Ie. tags.
+   *   An array of options to pass to the PHP Agent, such as tags.
    */
   protected function prepareAgentOptions() {
+    $tags = [];
+
     $route_options = $this->routeMatch->getRouteObject()->getOptions();
     if (isset($route_options['_admin_route'])) {
-      return ['tags' => ['is_admin_route' => TRUE]];
+      $tags['is_admin_route'] = TRUE;
     }
 
-    return [];
+    // Add tags based on the path patterns configured.
+    $tags = $tags + $this->preparePathPatternTags();
+
+    return ['tags' => $tags];
+  }
+
+  /**
+   * Provide tags based on the path patterns configured.
+   *
+   * @return array
+   *   An array of tags to pass to the PHP Agent.
+   */
+  protected function preparePathPatternTags() {
+    $tags = [];
+
+    // Fetch the current path from route object.
+    $path = $this->routeMatch->getRouteObject()->getPath();
+
+    // Fetch the configured path patterns.
+    $tag_config = $this->apiService->getTagConfig();
+
+    if (!$tag_config['path_patterns']) {
+      return [];
+    }
+
+    $patterns = $this->apiService
+      ->parseTagPatterns($tag_config['path_patterns']);
+
+    // Add tags depending on the path pattern set.
+    foreach ($patterns as $pattern) {
+      // If the configured path does not match with the current path
+      // continue to look for the next pattern.
+      if (!$this->pathMatcher->matchPath($path, $pattern['pattern'])) {
+        continue;
+      }
+
+      $tags[$pattern['tag_key']] = $pattern['tag_value'];
+    }
+
+    return $tags;
   }
 
 }

@@ -15,3 +15,5 @@ phpAgent:
   status: FALSE
 privacy:
   track_user: FALSE
+tags:
+  path_patterns: ''

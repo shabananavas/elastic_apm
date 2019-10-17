@@ -87,6 +87,13 @@ class ApiService implements ApiServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getTagConfig() {
+    return $this->config['tags'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPhpAgentConfigured() {
     $is_configured = TRUE;
 
@@ -102,8 +109,60 @@ class ApiService implements ApiServiceInterface {
         break;
       }
     }
-
     return $is_configured;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function parseTagPatterns($tag_config) {
+    $valid_patterns = [];
+
+    // Get an array of all patterns, one per line in the given string.
+    $patterns = explode(PHP_EOL, $tag_config);
+
+    foreach ($patterns as $pattern) {
+      $pattern_parts = explode(':', $pattern);
+
+      if (empty($pattern_parts['1'])) {
+        continue;
+      }
+
+      $tag_parts = explode('|', $pattern_parts['1']);
+
+      // Ignore the pattern if there is no tag value defined for it.
+      if (empty($tag_parts['1'])) {
+        continue;
+      }
+
+      $valid_patterns[] = [
+        'pattern' => trim($pattern_parts['0']),
+        'tag_key' => trim($tag_parts['0']),
+        'tag_value' => trim($tag_parts['1']),
+      ];
+    }
+
+    return $valid_patterns;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateTagPattern($pattern) {
+    $pattern_parts = array_filter(explode(':', $pattern), 'trim');
+
+    if (count($pattern_parts) !== 2) {
+      return FALSE;
+    }
+
+    $tag_parts = array_filter(explode('|', $pattern_parts['1']), 'trim');
+
+    // Ignore the pattern if there is no tag value defined for it.
+    if (count($tag_parts) !== 2) {
+      return FALSE;
+    }
+
+    return TRUE;
   }
 
 }

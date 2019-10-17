@@ -1,9 +1,14 @@
 elastic_apm.php_agent_settings:
-  title: 'PHP Agent Settings'
+  title: 'PHP agent settings'
   route_name: 'elastic_apm.php_agent_settings'
   base_route: 'elastic_apm.php_agent_settings'
 
 elastic_apm.privacy_settings:
-  title: 'Privacy Settings'
+  title: 'Privacy settings'
   route_name: 'elastic_apm.privacy_settings'
+  base_route: 'elastic_apm.php_agent_settings'
+
+elastic_apm.tag_settings:
+  title: 'Tag settings'
+  route_name: 'elastic_apm.tag_settings'
   base_route: 'elastic_apm.php_agent_settings'

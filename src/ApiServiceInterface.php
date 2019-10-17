@@ -37,11 +37,48 @@ interface ApiServiceInterface {
   public function isPhpAgentEnabled();
 
   /**
+   * Returns the tag configuration array.
+   *
+   * @return array
+   *   The tag configuration array.
+   */
+  public function getTagConfig();
+
+  /**
    * Returns TRUE if the Elastic APM php agent settings are configured.
    *
    * @return bool
    *   TRUE if the php agent settings are configured, FALSE otherwise.
    */
   public function isPhpAgentConfigured();
+
+  /**
+   * Returns the parsed tag patterns array.
+   *
+   * It ignores malformed patterns.
+   *
+   * @param string $tag_config
+   *   The tag config string.
+   *
+   * @return array
+   *   The parsed tag config array.
+   */
+  public function parseTagPatterns($tag_config);
+
+  /**
+   * Validates the given tag pattern.
+   *
+   * Checks whether the given pattern follows the expected format:
+   * pattern:tag-key|tag-value
+   * /product/*:provider|commerce
+   * entity.commerce_product.canonical:provider|commerce
+   *
+   * @param string $pattern
+   *   The pattern to validate.
+   *
+   * @return string[]
+   *   Returns an array containing the malformed patterns, if any were found.
+   */
+  public function validateTagPattern($pattern);
 
 }

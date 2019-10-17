@@ -56,3 +56,9 @@ elastic_apm.settings:
       track_user:
         type: boolean
         label: 'Track user'
+  tags:
+    path_patterns:
+      type: sequence
+      label: 'Path patterns'
+      sequence:
+        type: string
