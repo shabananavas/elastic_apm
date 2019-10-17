@@ -1,6 +1,16 @@
 elastic_apm.settings:
   type: config_object
   label: 'Elastic APM Settings'
+  monitoring:
+    paths:
+      patterns:
+        type: sequence
+        label: 'Path patterns'
+        sequence:
+          type: string
+      negate:
+        type: boolean
+        label: 'Negate path patterns'
   phpAgent:
     type: mapping
     label: 'PHP Agent Settings'

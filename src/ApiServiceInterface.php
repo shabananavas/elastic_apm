@@ -81,4 +81,12 @@ interface ApiServiceInterface {
    */
   public function validateTagPattern($pattern);
 
+  /**
+   * Returns TRUE if current path is configured to be monitored by Elastic APM.
+   *
+   * @return bool
+   *   TRUE if the current path should be monitored, FALSE otherwise.
+   */
+  public function shouldMonitor();
+
 }

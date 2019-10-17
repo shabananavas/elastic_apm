@@ -1,3 +1,7 @@
+monitoring:
+  paths:
+    patterns: ''
+    negate: false
 phpAgent:
   appName: ''
   appVersion: ''

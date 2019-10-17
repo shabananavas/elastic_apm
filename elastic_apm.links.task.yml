@@ -1,3 +1,8 @@
+elastic_apm.monitoring_settings:
+  title: 'Monitoring settings'
+  route_name: 'elastic_apm.monitoring_settings'
+  base_route: 'elastic_apm.php_agent_settings'
+
 elastic_apm.php_agent_settings:
   title: 'PHP agent settings'
   route_name: 'elastic_apm.php_agent_settings'

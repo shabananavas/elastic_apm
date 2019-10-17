@@ -149,6 +149,11 @@ class RequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
+    // Do not proceed if it is configured not to monitor the current page.
+    if (!$this->apiService->shouldMonitor()) {
+      return;
+    }
+
     // If this is a sub request, only process it if there was no master
     // request yet. In that case, it is probably a page not found or access
     // denied page.
@@ -200,6 +205,11 @@ class RequestSubscriber implements EventSubscriberInterface {
     // Don't process if we don't have a PHP Agent already initialized, meaning,
     // no transaction is in process.
     if (!$this->phpAgent) {
+      return;
+    }
+
+    // Do not proceed if it is configured not to monitor the current page.
+    if (!$this->apiService->shouldMonitor()) {
       return;
     }
 

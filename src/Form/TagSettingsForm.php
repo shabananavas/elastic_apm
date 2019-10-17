@@ -79,10 +79,10 @@ class TagSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
     ];
 
-    $path_help = $this->t('
-      Configure the tags to add to the transactions based on the internal path of
-      the request being served.
-    ');
+    $path_help = $this->t(
+      'Configure the tags to add to the transactions based on the internal path
+      of the request being served.'
+    );
     $path_help .= '<p>';
     $path_help .= '<strong>' . $this->t('Guidelines') . '</strong><br>';
     $path_help .= $this->t(
@@ -121,10 +121,10 @@ class TagSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
     ];
 
-    $route_help = $this->t('
-      Configure the tags to add to the transactions based on the route of the
-      request being served.
-    ');
+    $route_help = $this->t(
+      'Configure the tags to add to the transactions based on the route of the
+      request being served.'
+    );
     $route_help .= '<p>';
     $route_help .= '<strong>' . $this->t('Guidelines') . '</strong><br>';
     $route_help .= $this->t(

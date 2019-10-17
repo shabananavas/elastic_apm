@@ -1,3 +1,11 @@
+elastic_apm.monitoring_settings:
+  path: '/admin/config/development/elastic-apm/monitoring'
+  defaults:
+    _form: '\Drupal\elastic_apm\Form\MonitoringSettingsForm'
+    _title: 'Elastic APM monitoring settings'
+  requirements:
+    _permission: 'administer elastic_apm'
+
 elastic_apm.php_agent_settings:
   path: '/admin/config/development/elastic-apm'
   defaults:

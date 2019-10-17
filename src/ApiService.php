@@ -3,7 +3,11 @@
 namespace Drupal\elastic_apm;
 
 use Drupal;
+
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Path\AliasManagerInterface;
+use Drupal\Core\Path\PathMatcherInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 
 use PhilKra\Agent;
@@ -30,20 +34,53 @@ class ApiService implements ApiServiceInterface {
   protected $account;
 
   /**
+   * An alias manager to find the alias for the current system path.
+   *
+   * @var \Drupal\Core\Path\AliasManagerInterface
+   */
+  protected $aliasManager;
+
+  /**
+   * The path matcher.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  private $pathMatcher;
+
+  /**
+   * The current path.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
    * Constructs an Elastic APM object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory service.
    * @param \Drupal\Core\Session\AccountProxyInterface $account
    *   The current account.
+   * @param \Drupal\Core\Path\AliasManagerInterface $alias_manager
+   *   An alias manager to find the alias for the current system path.
+   * @param \Drupal\Core\Path\PathMatcherInterface $path_matcher
+   *   The path matcher.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The current route.
    */
   public function __construct(
-    ConfigFactoryInterface $configFactory,
-    AccountProxyInterface $account
+    ConfigFactoryInterface $config_factory,
+    AccountProxyInterface $account,
+    AliasManagerInterface $alias_manager,
+    PathMatcherInterface $path_matcher,
+    RouteMatchInterface $route_match
   ) {
     $this->account = $account;
+    $this->aliasManager = $alias_manager;
+    $this->pathMatcher = $path_matcher;
+    $this->routeMatch = $route_match;
 
-    $this->config = $configFactory->get('elastic_apm.settings')->get();
+    $this->config = $config_factory->get('elastic_apm.settings')->get();
     $this->config += [
       'framework' => 'Drupal',
       'frameworkVersion' => Drupal::VERSION,
@@ -89,6 +126,13 @@ class ApiService implements ApiServiceInterface {
    */
   public function getTagConfig() {
     return $this->config['tags'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMonitoringConfig() {
+    return $this->config['monitoring'];
   }
 
   /**
@@ -143,6 +187,53 @@ class ApiService implements ApiServiceInterface {
     }
 
     return $valid_patterns;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function shouldMonitor() {
+    $result = $this->shouldMonitorPath();
+    if ($result === NULL) {
+      return TRUE;
+    }
+
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function shouldMonitorPath() {
+    $config = $this->getMonitoringConfig();
+
+    $pattern_array = array_filter(
+      explode(PHP_EOL, $config['paths']['patterns']),
+      'trim'
+    );
+    if (!$pattern_array) {
+      return NULL;
+    }
+
+    // Are the pages supposed to be excluded from the requests?
+    $negate = (bool) $config['paths']['negate'];
+
+    // Get the current path.
+    $path = $this->routeMatch->getRouteObject()->getPath();
+
+    // Do not trim a trailing slash if that is the complete path.
+    $path = $path === '/' ? $path : rtrim($path, '/');
+
+    foreach ($pattern_array as $pattern) {
+      $match = $this->pathMatcher->matchPath($path, $pattern);
+      if (!$match) {
+        continue;
+      }
+
+      return $negate ? FALSE : TRUE;
+    }
+
+    return $negate ? TRUE : FALSE;
   }
 
   /**
