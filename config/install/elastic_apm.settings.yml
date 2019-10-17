@@ -17,3 +17,4 @@ privacy:
   track_user: FALSE
 tags:
   path_patterns: ''
+  route_patterns: ''

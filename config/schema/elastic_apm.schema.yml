@@ -62,3 +62,8 @@ elastic_apm.settings:
       label: 'Path patterns'
       sequence:
         type: string
+    route_patterns:
+      type: sequence
+      label: 'Route patterns'
+      sequence:
+        type: string

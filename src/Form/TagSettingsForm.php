@@ -61,7 +61,7 @@ class TagSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $config = $this->config('elastic_apm.settings');
+    $config = $this->config('elastic_apm.settings')->get('tags');
 
     $form['paths'] = [
       '#type' => 'details',
@@ -69,39 +69,82 @@ class TagSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
     ];
 
-    $help = $this->t('
+    $path_help = $this->t('
       Configure the tags to add to the transactions based on the internal path of
       the request being served.
     ');
-    $help .= '<p>';
-    $help .= '<strong>' . $this->t('Guidelines') . '</strong><br>';
-    $help .= $this->t(
+    $path_help .= '<p>';
+    $path_help .= '<strong>' . $this->t('Guidelines') . '</strong><br>';
+    $path_help .= $this->t(
       'Use ":" to separate the path from the tag and "|" to separate the tag key
       from its value.'
     ) . '<br>';
-    $help .= $this->t(
+    $path_help .= $this->t(
       'The "*" character used in the path is a wildcard.'
     ) . '<br>';
-    $help .= $this->t('Enter one path/tag combination per line.') . '<br>';
-    $help .= $this->t(
+    $path_help .= $this->t('Enter one path/tag combination per line.') . '<br>';
+    $path_help .= $this->t(
       'Each tag key can only have one value. If a path ending up having multiple
       values for the same key as a result of multiple patterns, the last one will
-      be used.') . '<br>';
-    $help .= '</p>';
-    $help .= '<p>';
-    $help .= '<strong>' . $this->t('Examples') . '</strong>';
-    $help .= '<br>' .
+      be used.'
+    ) . '<br>';
+    $path_help .= '</p>';
+    $path_help .= '<p>';
+    $path_help .= '<strong>' . $this->t('Examples') . '</strong>';
+    $path_help .= '<br>' .
       '/node/* &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : provider|node<br>' .
       '/checkout/* &nbsp;&nbsp;&nbsp;: provider|commerce<br>' .
       '/checkout/* &nbsp;&nbsp;&nbsp;: ux-group|cart-and-checkout<br>' .
       '/cart &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : ux-group|cart-and-checkout<br>' .
       '/custom-path : feature|custom-feature';
-    $help .= '</p>';
+    $path_help .= '</p>';
     $form['paths']['path_patterns'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Tags per path'),
-      '#default_value' => $config->get('tags')['path_patterns'],
-      '#description' => $help,
+      '#default_value' => $config['path_patterns'],
+      '#description' => $path_help,
+    ];
+
+    $form['routes'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Routes'),
+      '#open' => TRUE,
+    ];
+
+    $route_help = $this->t('
+      Configure the tags to add to the transactions based on the route of the
+      request being served.
+    ');
+    $route_help .= '<p>';
+    $route_help .= '<strong>' . $this->t('Guidelines') . '</strong><br>';
+    $route_help .= $this->t(
+      'Use ":" to separate the route from the tag and "|" to separate the tag key
+      from its value.'
+    ) . '<br>';
+    $route_help .= $this->t(
+      'The "*" character used in the route is a wildcard.'
+    ) . '<br>';
+    $route_help .= $this->t('Enter one route/tag combination per line.') . '<br>';
+    $route_help .= $this->t(
+      'Each tag key can only have one value. If a route ending up having multiple
+      values for the same key as a result of multiple patterns, the last one will
+      be used.'
+    ) . '<br>';
+    $route_help .= '</p>';
+    $route_help .= '<p>';
+    $route_help .= '<strong>' . $this->t('Examples') . '</strong>';
+    $route_help .= '<br>' .
+      'entity.node.* &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : provider|node<br>' .
+      'commerce_checkout.form &nbsp;&nbsp;&nbsp;: provider|commerce<br>' .
+      'commerce_checkout.form &nbsp;&nbsp;&nbsp;: ux-group|cart-and-checkout<br>' .
+      'commerce_cart.page &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : ux-group|cart-and-checkout<br>' .
+      'custom.route : feature|custom-feature';
+    $route_help .= '</p>';
+    $form['routes']['route_patterns'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Tags per route'),
+      '#default_value' => $config['route_patterns'],
+      '#description' => $route_help,
     ];
 
     return parent::buildForm($form, $form_state);
@@ -113,30 +156,19 @@ class TagSettingsForm extends ConfigFormBase {
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
 
-    // If path pattern tags are set, ensure that it is entered in the expected
-    // format.
-    if (!$values['path_patterns']) {
+    if (!$values['path_patterns'] && !$values['route_patterns']) {
       return;
     }
 
-    $invalid_patterns = $this->validateTagPatterns($values['path_patterns']);
-    if (!$invalid_patterns) {
-      return;
-    }
-
-    $markup = '<ul>';
-    foreach ($invalid_patterns as $pattern) {
-      $markup .= '<li>' . $pattern . '</li>';
-    }
-    $markup .= '</ul>';
-    $text = 'The following path patterns are malformed. Please correct them and try again.';
-    $message = new TranslatableMarkup(
-      '@text' . $markup,
-      ['@text' => $text]
-    );
-    $form_state->setError(
+    $this->setPatternErrors(
+      $values['path_patterns'],
       $form['paths']['path_patterns'],
-      $message
+      $form_state
+    );
+    $this->setPatternErrors(
+      $values['route_patterns'],
+      $form['routes']['route_patterns'],
+      $form_state
     );
   }
 
@@ -149,11 +181,51 @@ class TagSettingsForm extends ConfigFormBase {
     $this->config('elastic_apm.settings')
       ->set(
         'tags',
-        ['path_patterns' => $values['path_patterns']]
+        [
+          'path_patterns' => $values['path_patterns'],
+          'route_patterns' => $values['route_patterns'],
+        ]
       )
       ->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Set an error message for the given form element in the case of error.
+   *
+   * @param string $patterns_string
+   *   A string containing all patterns that will be validated, as stored in the
+   *   configuration.
+   */
+  protected function setPatternErrors(
+    $patterns_string,
+    array &$element,
+    FormStateInterface $form_state
+  ) {
+    if (!$patterns_string) {
+      return [];
+    }
+
+    $invalid_patterns = $this->validateTagPatterns($patterns_string);
+    if (!$invalid_patterns) {
+      return;
+    }
+
+    $markup = '<ul>';
+    foreach ($invalid_patterns as $pattern) {
+      $markup .= '<li>' . $pattern . '</li>';
+    }
+    $markup .= '</ul>';
+    $text = 'The following patterns are malformed. Please correct them and try again.';
+    $message = new TranslatableMarkup(
+      '@text' . $markup,
+      ['@text' => $text]
+    );
+    $form_state->setError(
+      $element,
+      $message
+    );
   }
 
   /**

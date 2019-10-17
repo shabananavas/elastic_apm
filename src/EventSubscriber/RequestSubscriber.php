@@ -293,6 +293,7 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     // Add tags based on the path patterns configured.
     $tags = $tags + $this->preparePathPatternTags();
+    $tags = $tags + $this->prepareRoutePatternTags();
 
     return ['tags' => $tags];
   }
@@ -331,6 +332,70 @@ class RequestSubscriber implements EventSubscriberInterface {
     }
 
     return $tags;
+  }
+
+  /**
+   * Provide tags based on the route patterns configured.
+   *
+   * @return array
+   *   An array of tags to pass to the PHP Agent.
+   */
+  protected function prepareRoutePatternTags() {
+    $tags = [];
+
+    // Fetch the current path from route object.
+    $route = $this->routeMatch->getRouteName();
+
+    // Fetch the configured path patterns.
+    $tag_config = $this->apiService->getTagConfig();
+
+    if (!$tag_config['route_patterns']) {
+      return [];
+    }
+
+    $patterns = $this->apiService
+      ->parseTagPatterns($tag_config['route_patterns']);
+
+    // Add tags depending on the path pattern set.
+    foreach ($patterns as $pattern) {
+      // If the configured route does not match with the current route
+      // continue to look for the next pattern.
+      if (!$this->matchRoute($route, $pattern['pattern'])) {
+        continue;
+      }
+
+      $tags[$pattern['tag_key']] = $pattern['tag_value'];
+    }
+
+    return $tags;
+  }
+
+  /**
+   * Checks if a route matches any pattern in a set of patterns.
+   *
+   * @param string $route
+   *   The route to match.
+   * @param string $pattern
+   *   The pattern string.
+   *
+   * @return bool
+   *   TRUE if the route matches the pattern, FALSE otherwise.
+   */
+  protected function matchRoute($route, $pattern) {
+    if (!isset($this->regexes[$pattern])) {
+      // Convert path settings to a regular expression.
+      $to_replace = [
+        // Quote asterisks.
+        '/\\\\\*/',
+      ];
+      $replacements = [
+        '.*',
+      ];
+      $patterns_quoted = preg_quote($pattern, '/');
+      $this->regexes[$pattern] = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')$/';
+    }
+
+    return (bool) preg_match($this->regexes[$pattern], $route);
   }
 
 }
