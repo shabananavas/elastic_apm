@@ -267,13 +267,13 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected function constructQuerySpan($connection, $driver, array $query) {
     $span = [];
 
-    $start = $this->time->getCurrentMicroTime() - $this->time->getRequestMicroTime();
-
     // Add the necessary schema info for the APM server.
     $span['name'] = $query['caller']['class'] . '::' . $query['caller']['function'];
     $span['type'] = 'db.' . $driver . '.query';
-    // Start time relative to the transaction start in milliseconds.
-    $span['start'] = $start * 1000;
+    // We do not have the time the query was issued; we only have its duration
+    // and the time the log is being collected. Start time is however mandatory
+    // for the APM server, so let's set it to the beginning of the transaction.
+    $span['start'] = 0;
     $span['duration'] = $query['time'];
     $span['context'] = [
       'db' => [
