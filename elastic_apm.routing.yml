@@ -22,6 +22,14 @@ elastic_apm.privacy_settings:
   requirements:
     _permission: 'administer elastic_apm'
 
+elastic_apm.rum_agent_settings:
+  path: '/admin/config/development/elastic-apm/rum'
+  defaults:
+    _form: '\Drupal\elastic_apm\Form\RumAgentSettingsForm'
+    _title: 'Elastic APM Real User Monitoring settings'
+  requirements:
+    _permission: 'administer elastic_apm'
+
 elastic_apm.tag_settings:
   path: '/admin/config/development/elastic-apm/tag'
   defaults:

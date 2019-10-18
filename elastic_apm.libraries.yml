@@ -1,0 +1,19 @@
+# Real User Monitoring javascript.
+rum-agent:
+  remote: https://github.com/elastic/apm-agent-rum-js
+  version: 4.5.1
+  license:
+    name: MIT
+    gpl-compatible: true
+  js:
+    https://unpkg.com/@elastic/apm-rum@4.5.1/dist/bundles/elastic-apm-rum.umd.min.js:
+      type: external
+      attributes:
+        crossorigin: true
+
+rum-init:
+  version: VERSION
+  js:
+    js/rum-init.js: {}
+  dependencies:
+    - elastic_apm/rum-agent

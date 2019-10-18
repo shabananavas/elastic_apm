@@ -37,6 +37,22 @@ interface ApiServiceInterface {
   public function isPhpAgentEnabled();
 
   /**
+   * Returns TRUE if the user has enabled Elastic APM Rum Agent.
+   *
+   * @return bool
+   *   TRUE if it is enabled, FALSE otherwise.
+   */
+  public function isRumAgentEnabled();
+
+  /**
+   * Returns the RUM Agent configuration array.
+   *
+   * @return array
+   *   The RUM Agent configuration array.
+   */
+  public function getRumAgentConfig();
+
+  /**
    * Returns the tag configuration array.
    *
    * @return array

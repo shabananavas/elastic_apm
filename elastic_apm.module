@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Provides hooks and functionality for the Elastic APM module.
+ */
+
+/**
+ * Implements hook_page_attachments.
+ *
+ * Adds the javascript file required for Real User Monitoring. Currently
+ * included in all pages; that will change once including/excluding pages from
+ * monitoring is implemented.
+ */
+function elastic_apm_page_attachments(array &$page) {
+  $api_service = \Drupal::service('elastic_apm.api_service');
+
+  // Do not proceed if Real user monitoring is not enabled.
+  if (!($api_service->isRumAgentEnabled())) {
+    return;
+  }
+
+  $config = $api_service->getRumAgentConfig();
+
+  $page['#attached']['library'][] = 'elastic_apm/rum-init';
+  $page['#attached']['drupalSettings']['elasticApm']['rum'] = [
+    'serviceName' => $config['serviceName'],
+    'serverUrl' => $config['serverUrl'],
+    'serviceVersion' => $config['serviceVersion'],
+  ];
+}

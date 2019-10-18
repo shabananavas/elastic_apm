@@ -19,6 +19,11 @@ phpAgent:
   status: FALSE
 privacy:
   track_user: FALSE
+rumAgent:
+  serviceName: ''
+  serviceVersion: ''
+  serverUrl: ''
+  status: false
 tags:
   path_patterns: ''
   route_patterns: ''

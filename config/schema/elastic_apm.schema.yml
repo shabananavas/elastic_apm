@@ -66,6 +66,22 @@ elastic_apm.settings:
       track_user:
         type: boolean
         label: 'Track user'
+  rumAgent:
+    type: mapping
+    label: 'Real User Monitoring settings'
+    mapping:
+      serviceName:
+        type: label
+        label: 'Service name'
+      serviceVersion:
+        type: label
+        label: 'Service version'
+      serverUrl:
+        type: label
+        label: 'Service URL'
+      status:
+        type: boolean
+        label: 'Enabled'
   tags:
     path_patterns:
       type: sequence

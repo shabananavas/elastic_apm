@@ -2,18 +2,28 @@ elastic_apm.monitoring_settings:
   title: 'Monitoring settings'
   route_name: 'elastic_apm.monitoring_settings'
   base_route: 'elastic_apm.php_agent_settings'
+  weight: 1
 
 elastic_apm.php_agent_settings:
   title: 'PHP agent settings'
   route_name: 'elastic_apm.php_agent_settings'
   base_route: 'elastic_apm.php_agent_settings'
+  weight: 0
 
 elastic_apm.privacy_settings:
   title: 'Privacy settings'
   route_name: 'elastic_apm.privacy_settings'
   base_route: 'elastic_apm.php_agent_settings'
+  weight: 2
+
+elastic_apm.rum_agent_settings:
+  title: 'RUM agent settings'
+  route_name: 'elastic_apm.rum_agent_settings'
+  base_route: 'elastic_apm.php_agent_settings'
+  weight: 4
 
 elastic_apm.tag_settings:
   title: 'Tag settings'
   route_name: 'elastic_apm.tag_settings'
   base_route: 'elastic_apm.php_agent_settings'
+  weight: 3
