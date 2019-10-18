@@ -309,7 +309,7 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     $route_options = $this->routeMatch->getRouteObject()->getOptions();
     if (isset($route_options['_admin_route'])) {
-      $tags['is_admin_route'] = TRUE;
+      $tags['route-is-admin'] = TRUE;
     }
 
     // Add tags based on the path/route patterns configured.
