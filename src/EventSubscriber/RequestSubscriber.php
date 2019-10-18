@@ -161,13 +161,12 @@ class RequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // Start a new transaction.
     try {
-      $transaction = $this->phpAgent
-        ->startTransaction($this->routeMatch->getRouteName());
+      // Start a new transaction.
+      $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
 
-      // Capture database time by wrapping spans around the db queries run.
-      $transaction->setSpans($this->constructDatabaseSpans());
+      // Initiate database log for capturing database queries as spans.
+      $this->startDatabaseLog();
     }
     catch (Exception $e) {
       // Log the error.
@@ -212,9 +211,13 @@ class RequestSubscriber implements EventSubscriberInterface {
       return;
     }
 
-    // End the transaction.
     try {
-      $this->phpAgent->stopTransaction($this->routeMatch->getRouteName());
+      // Capture database queries as spans and stop the transaction.
+      $transaction = $this->phpAgent->getTransaction(
+        $this->routeMatch->getRouteName()
+      );
+      $transaction->setSpans($this->constructDatabaseSpans());
+      $transaction->stop();
 
       // Send our transaction to Elastic.
       $this->phpAgent->send();
@@ -232,6 +235,15 @@ class RequestSubscriber implements EventSubscriberInterface {
   }
 
   /**
+   * Start database logging for all connections.
+   */
+  protected function startDatabaseLog() {
+    foreach (array_keys(Database::getAllConnectionInfo()) as $key) {
+      Database::startLog('elastic_apm', $key);
+    }
+  }
+
+  /**
    * Create spans around the db queries that were run in this request.
    *
    * @return array
@@ -242,8 +254,7 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     foreach (Database::getAllConnectionInfo() as $key => $connection) {
       $driver = current($connection)['driver'];
-      $database_log = Database::startLog('elastic_apm', $key);
-      foreach ($database_log->get('elastic_apm') as $query) {
+      foreach (Database::getLog('elastic_apm', $key) as $query) {
         $spans[] = $this->constructQuerySpan($key, $driver, $query);
       }
     }
@@ -288,7 +299,7 @@ class RequestSubscriber implements EventSubscriberInterface {
         'abs_path' => $query['caller']['file'],
         'filename' => substr($query['caller']['file'], strrpos($query['caller']['file'], '/') + 1),
         'lineno' => $query['caller']['line'],
-        'vars' => $query['args'],
+        'vars' => (object) $query['caller']['args'],
       ],
     ];
 
