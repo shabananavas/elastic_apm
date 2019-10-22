@@ -5,6 +5,11 @@
   "homepage": "https://www.drupal.org/project/elastic_apm",
   "license": "GPL-3.0+",
   "require": {
-    "philkra/elastic-apm-php-agent": "^6.5.2"
+    "philkra/elastic-apm-php-agent": "~6.5.8"
+  },
+  "patches": {
+    "drupal/core": {
+      "Start time of query in database log": "https://www.drupal.org/files/issues/2019-10-22/core.query-start-time-3089326-2.patch"
+    }
   }
 }

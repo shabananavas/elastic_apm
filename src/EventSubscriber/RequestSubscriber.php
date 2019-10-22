@@ -163,7 +163,11 @@ class RequestSubscriber implements EventSubscriberInterface {
 
     try {
       // Start a new transaction.
-      $this->phpAgent->startTransaction($this->routeMatch->getRouteName());
+      $this->phpAgent->startTransaction(
+        $this->routeMatch->getRouteName(),
+        [],
+        $this->time->getRequestMicroTime()
+      );
 
       // Initiate database log for capturing database queries as spans.
       $this->startDatabaseLog();
@@ -278,14 +282,15 @@ class RequestSubscriber implements EventSubscriberInterface {
   protected function constructQuerySpan($connection, $driver, array $query) {
     $span = [];
 
+    // With the Drupal core patch required by this module (beta1+) we have the
+    // start time of the query available.
+    $start = $query['start'] - $this->time->getRequestMicroTime();
+
     // Add the necessary schema info for the APM server.
     $span['name'] = $query['caller']['class'] . '::' . $query['caller']['function'];
     $span['type'] = 'db.' . $driver . '.query';
-    // We do not have the time the query was issued; we only have its duration
-    // and the time the log is being collected. Start time is however mandatory
-    // for the APM server, so let's set it to the beginning of the transaction.
-    $span['start'] = 0;
-    $span['duration'] = $query['time'];
+    $span['start'] = $start * 1000;
+    $span['duration'] = $query['time'] * 1000;
     $span['context'] = [
       'db' => [
         'instance' => $connection,
